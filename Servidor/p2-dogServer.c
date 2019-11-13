@@ -25,36 +25,27 @@ struct Client{
 void* ListenConections(void* client){
     CurrentUsers = 0;
     while(true){
-        if(CurrentUsers < BACKLOG){
-            int clientfd = accept(serverfd, (struct sockaddr*) &clientfd, &len); // Se acepta una solicitud de conexión entrante.
-            if(clientfd == -1){
-                printf("La conexión no pudo ser aceptada.\n");
-            }else{
-                printf("El usuario se ha podido conectar correctamente.\n");
-                CurrentUsers++;
-            }
+        int clientfd = accept(serverfd, (struct sockaddr*) &clientfd, &len); // Se acepta una solicitud de conexión entrante.
+        if(clientfd == -1){
+            printf("La conexión no pudo ser aceptada.\n");
         }else{
-            ; // Rechazar.
+            printf("Se ha conectado un nuevo usuario correctamente.\n");
+            CurrentUsers++;
         }
     } 
 }
 
 
 int main(){
-    //InitConsole();
-
     printf("Bienvenido a la apliación cliente.\n\n");
     printf("Inicializando servidor...\n");
-
-    int r;                                                // Se declaran variables.
+    int r;                                                  // Se declaran variables.
     struct sockaddr_in server;                              // Se configura y se crea el socket.
     pthread_t ListenThread;
     len = sizeof(struct sockaddr);
     serverfd = socket(AF_INET, SOCK_STREAM, 0);
     if(serverfd == -1){
-        printf("El socket no pudo ser creado");
-        //PressToContinue();
-        //DisposeConsole();
+        perror("El socket no pudo ser creado");
         exit(EXIT_FAILURE);
     }
     server.sin_family = AF_INET;
@@ -63,26 +54,19 @@ int main(){
     bzero((server.sin_zero), 8); 
     r = bind(serverfd, (struct sockaddr*)&server, len);
     if(r == -1){
-        printf("La dirección IP no pudo ser asignada.\n");
-        //PressToContinue();
-        //DisposeConsole();
+        perror("La dirección IP no pudo ser asignada.\n");
         exit(EXIT_FAILURE);
     }
     r = listen(serverfd, BACKLOG);                                  // Se pone el servidor a la escucha de solicitudes entrantes.
     if(r == -1){
-        printf("El servidor no puede escuchar conexiones.\n");
-        //PressToContinue();
-        //DisposeConsole();
+        perror("El servidor no puede escuchar conexiones.\n");
         exit(EXIT_FAILURE);
     }
 
-    printf("El servidor fue inicializado correctamente, se están escuchando solicitudes de conexión entrantes.\n");
+    printf("El servidor fue inicializado correctamente, se están escuchando solicitudes de conexión entrantes.\n\n");
 
-    pthread_create(&ListenThread,NULL,ListenConections,NULL);
+    pthread_create(&ListenThread,NULL,ListenConections,NULL);       // Se crea un hilo que se encarga de escuchar conexiónes entrantes.
 
-
-    
-    //PressToContinue();
     while(true){continue;}
     DisposeConsole();
 
