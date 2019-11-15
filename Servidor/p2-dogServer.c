@@ -9,6 +9,9 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include "Functions.h"
+#include "Hash.h"
+#include "Opciones.h"
+#include "ShippingData.h"
 
 #define PORT 1234
 #define BACKLOG 32
@@ -25,12 +28,11 @@ struct Client{
 void* ListenRequest(void* client){
     printf("Escuchando peticiones...\n");
     struct Client *toListen = (struct Client*)client;
-    while(true){ //que despues hay que cambiar por alga más elegante mirando si se desconecta el cliente
-        while(toListen->idSolicitud != 0){       //Y te preguntarás joven richie por qué este while, y yo te diré, porque no queremos que lea más solicitudes hasta que no ejecute la que le llegó 
+    while(true){                                                                        //que despues hay que cambiar por alga más elegante mirando si se desconecta el cliente
+        while(toListen->idSolicitud != 0){                                              //Y te preguntarás joven richie por qué este while, y yo te diré, porque no queremos que lea más solicitudes hasta que no ejecute la que le llegó 
             sleep(1);
         }
         int rec = recv(toListen->clientfd, &toListen->idSolicitud, sizeof(int), 0);     //Se guarda la id de solicitud
-        //Y falta poner el objeto leido
     }
 }
 
@@ -56,6 +58,8 @@ int main(){
     struct sockaddr_in server;                                  
     pthread_t ListenThread;
     struct Client *clientsConnected;
+    struct HashTable table = CreateTable();
+
     printf("Bienvenido a la apliación cliente.\n\n");
     printf("Inicializando servidor...\n");
     len = sizeof(struct sockaddr);
@@ -85,22 +89,43 @@ int main(){
 
     pthread_create(&ListenThread,NULL,ListenConections, clientsConnected);          // Se crea un hilo que se encarga de escuchar conexiónes entrantes.
 
+    int i = 0;
     while(true){
-        for(int i = 0; i<CurrentUsers; i++){
-            switch((clientsConnected + i)->idSolicitud){
-                case 1:
-                    break;
-                case 2:
-                    break;
-                case 3:
-                    break;
-                case 4:
-                    break;
-                case 5:
-                    break;
-                default:
-                    break;
+        if(i<CurrentUsers){
+            int l = 0;
+            int solicitud = (clientsConnected+i)->idSolicitud;
+            if(solicitud == 1){
+                size_t dogSize = sizeof(struct dogType);
+                struct dogType *new = (struct dogType*)malloc(dogSize);
+                bzero(new, dogSize);
+                l = recv((clientsConnected+i)->clientfd, new, dogSize, 0);
+                IngresarRegistro(&table, new);
+                free(new);
+            } else if (solicitud == 2){
+                long id;
+                l = recv((clientsConnected+i)->clientfd, &id, sizeof(id), 0);
+                VerRegistro(id);
+            } else if (solicitud == 3){
+                long id;
+                l = recv((clientsConnected+i)->clientfd, &id, sizeof(id), 0);
+                BorrarRegistro(&table, id);
+            } else if (solicitud == 4){
+                char *nombre = (char *)malloc(32);
+                bzero(nombre, 32);
+                l = recv((clientsConnected+i)->clientfd, nombre, 32, 0);
+                BuscarRegistro(&table, nombre);
+                free(nombre);
+            } else if (solicitud == 5){
+                //Semaforo
+                for(int j = i; i < CurrentUsers-1; j++){
+                    *(clientsConnected+j) = *(clientsConnected+j+1);
+                }
+                CurrentUsers--;
             }
+            (clientsConnected+i)->idSolicitud = 0;
+            i++;
+        } else {
+            i = 0;
         }
     }
     DisposeConsole();

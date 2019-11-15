@@ -41,11 +41,47 @@ int main(){
         exit(EXIT_SUCCESS);
     }
 
+    _Bool quit = false;
+    int MenuOption;
+    while(!quit){                                       //Mientras el usuario no pida salir, imprimir el menú.
+        fflush(stdin);                        
+        printw("\nPractica 1 - Sistemas Operativos 2019-II.\n\n");
+        printw("1. Ingresar registro.\n");
+        printw("2. Ver registro.\n");
+        printw("3. Borrar registro.\n");
+        printw("4. Buscar registro.\n");
+        printw("5. Salir.\n\n");
+        printw("Esperando opción: ");
+        scanw("%hi",&MenuOption);
+        printw("\n");
 
-
-
-
-
+        //Evaluación de las opciones de menú.
+        switch (MenuOption){
+        case 1:
+            
+            break;
+        case 2:
+            
+            break;
+        case 3:
+            
+            break;
+        case 4:
+            
+            break;
+        case 5:
+            
+            break;
+        case 31415:
+            
+            break;
+        default: 
+            printw("El valor \"%hi\" no es valido.\n\n",MenuOption);
+            endwin();
+            exit(-1);
+            break;
+        }
+    }
 
     PressToContinue();
     DisposeConsole();

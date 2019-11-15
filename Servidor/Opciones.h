@@ -1,24 +1,14 @@
 #ifndef OPCIONESH
 #define OPCIONESH
 #include "Funciones.h"
-
-// Estructura de almacenamiento de datos.
-struct dogType{
-    char name[32];
-    char type[32];
-    int age;
-    char breed[16];
-    int height;
-    float weight;
-    char gender;     
-};
+#include "Hash.h"
+#include "ShippingData.h"
 
 //Funciones correspondientes a las opciones indicadas.
-int IngresarRegistro(struct List* tabla);
-int VerRegistro();
-int BorrarRegistro(struct List* tabla);
-int BuscarRegistro(struct List* tabla);
-void Salir(_Bool *valor);
-int Generado(struct List* tabla);
+int IngresarRegistro(struct HashTable* tabla, struct dogType *new);
+int VerRegistro(long id);
+int BorrarRegistro(struct HashTable* tabla, long id);
+int BuscarRegistro(struct HashTable* tabla, char *nombre);
+int Generado(struct HashTable* tabla);
 
 #endif
