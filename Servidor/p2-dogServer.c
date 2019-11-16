@@ -21,18 +21,19 @@ struct Client{
     int clientfd;
     int idSolicitud;
     pthread_t idThread;
+    struct in_addr Ip;
 };
 
 // Variables globales.
 int serverfd;
 socklen_t len;
 int CurrentUsers;
-struct Client * clientsConnected[BACKLOG];
+struct Client* clientsConnected[BACKLOG];
 
 // Método para el hilo que se encarga de recibir datos de los clientes.
 void* ListenRequest(void* client){
-    printf("Escuchando peticiones...\n");
     struct Client *toListen = (struct Client*)client;
+    printf("Escuchando peticiones del cliente %s ...\n\n",inet_ntoa(toListen->Ip));
     while(true){                                                                     
         while(toListen->idSolicitud != 0){                                              
             sleep(1);
@@ -46,10 +47,11 @@ void* ListenConections(void* clients){
     CurrentUsers = 0;
     while(true){
         int clientfd = accept(serverfd, (struct sockaddr*) &clientfd, &len);        // Se acepta una solicitud de conexión entrante.
+        clientsConnected[CurrentUsers]->Ip.s_addr = clientfd;
         if(clientfd == -1){
-            printf("La conexión entrante de la Ip %d no pudo ser aceptada.\n",clientfd);
+            printf("La conexión entrante de la Ip %s no pudo ser aceptada.\n",inet_ntoa(clientsConnected[CurrentUsers]->Ip));
         }else{
-            printf("El remoto %d se ha conectado correctamente.\n",clientfd);      
+            printf("El remoto %s se ha conectado correctamente.\n",inet_ntoa(clientsConnected[CurrentUsers]->Ip));      
             clientsConnected[CurrentUsers]->clientfd = clientfd;
             clientsConnected[CurrentUsers]->idSolicitud = 0;
             pthread_create(&clientsConnected[CurrentUsers]->idThread,NULL,ListenRequest, clientsConnected[CurrentUsers]);  // Se crea un hilo que se encarga de recibir datos entrantes.
@@ -75,7 +77,7 @@ int main(){
     }
     serverfd = socket(AF_INET, SOCK_STREAM, 0);                                     // Se configura y se crea el socket.
     if(serverfd == -1){                                                             // Verificación de error.
-        perror("El socket no pudo ser creado");
+        perror("El socket no pudo ser creado.\n");
         exit(EXIT_FAILURE);
     }
     server.sin_family = AF_INET;
