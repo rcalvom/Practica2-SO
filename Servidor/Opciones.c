@@ -3,7 +3,7 @@
 #include <string.h>
 #include <strings.h>
 #include <ncurses.h> 
-#include "Funciones.h"
+#include "Functions.h"
 #include "Hash.h"
 #include "ShippingData.h"
 

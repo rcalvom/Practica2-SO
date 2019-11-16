@@ -1,6 +1,6 @@
 #ifndef OPCIONESH
 #define OPCIONESH
-#include "Funciones.h"
+#include "Functions.h"
 #include "Hash.h"
 #include "ShippingData.h"
 

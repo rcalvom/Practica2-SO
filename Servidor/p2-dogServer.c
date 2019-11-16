@@ -10,43 +10,49 @@
 #include <pthread.h>
 #include "Functions.h"
 #include "Hash.h"
-#include "Opciones.h"
 #include "ShippingData.h"
+#include "Opciones.h"
 
 #define PORT 1234
 #define BACKLOG 32
 
-int serverfd;
-socklen_t len;
-int CurrentUsers;
-
+// Estructura que almacena los datos del cliente.
 struct Client{
     int clientfd;
     int idSolicitud;
+    pthread_t idThread;
 };
 
+// Variables globales.
+int serverfd;
+socklen_t len;
+int CurrentUsers;
+struct Client * clientsConnected[BACKLOG];
+
+// Método para el hilo que se encarga de recibir datos de los clientes.
 void* ListenRequest(void* client){
     printf("Escuchando peticiones...\n");
     struct Client *toListen = (struct Client*)client;
-    while(true){                                                                        //que despues hay que cambiar por alga más elegante mirando si se desconecta el cliente
-        while(toListen->idSolicitud != 0){                                              //Y te preguntarás joven richie por qué este while, y yo te diré, porque no queremos que lea más solicitudes hasta que no ejecute la que le llegó 
+    while(true){                                                                     
+        while(toListen->idSolicitud != 0){                                              
             sleep(1);
         }
-        int rec = recv(toListen->clientfd, &toListen->idSolicitud, sizeof(int), 0);     //Se guarda la id de solicitud
+        int rec = recv(toListen->clientfd, &toListen->idSolicitud, sizeof(int), 0);     
     }
 }
 
+// Método para hilo que se encarga de estar a la escucha de nuevas solicitudes entrantes.
 void* ListenConections(void* clients){
     CurrentUsers = 0;
     while(true){
-        struct Client *toAccept = (struct Client*)(clients+CurrentUsers);
         int clientfd = accept(serverfd, (struct sockaddr*) &clientfd, &len);        // Se acepta una solicitud de conexión entrante.
         if(clientfd == -1){
-            printf("La conexión no pudo ser aceptada.\n");
+            printf("La conexión entrante de la Ip %d no pudo ser aceptada.\n",clientfd);
         }else{
-            printf("Se ha conectado un nuevo usuario correctamente.\n");
-            toAccept->clientfd = clientfd;
-            toAccept->idSolicitud = 0;
+            printf("El remoto %d se ha conectado correctamente.\n",clientfd);      
+            clientsConnected[CurrentUsers]->clientfd = clientfd;
+            clientsConnected[CurrentUsers]->idSolicitud = 0;
+            pthread_create(&clientsConnected[CurrentUsers]->idThread,NULL,ListenRequest, clientsConnected[CurrentUsers]);  // Se crea un hilo que se encarga de recibir datos entrantes.
             CurrentUsers++;
         }
     } 
@@ -57,16 +63,18 @@ int main(){
     int r;                                                                          // Se declaran variables.
     struct sockaddr_in server;                                  
     pthread_t ListenThread;
-    struct Client *clientsConnected;
     struct HashTable table = CreateTable();
 
     printf("Bienvenido a la apliación cliente.\n\n");
     printf("Inicializando servidor...\n");
+
     len = sizeof(struct sockaddr);
-    clientsConnected = (struct Client*)malloc(sizeof(struct Client)*BACKLOG);              // Se solicita memoria para almacenar los clientes
-    bzero(clientsConnected, sizeof(struct Client)*BACKLOG);
+    for(int i = 0; i<BACKLOG; i++){
+        clientsConnected[i] = (struct Client*) malloc(sizeof(struct Client)); 
+        bzero(clientsConnected[i], sizeof(struct Client));
+    }
     serverfd = socket(AF_INET, SOCK_STREAM, 0);                                     // Se configura y se crea el socket.
-    if(serverfd == -1){                                                             // Verificación de error
+    if(serverfd == -1){                                                             // Verificación de error.
         perror("El socket no pudo ser creado");
         exit(EXIT_FAILURE);
     }
@@ -74,13 +82,13 @@ int main(){
     server.sin_port = htons(PORT);
     server.sin_addr.s_addr = INADDR_ANY;
     bzero((server.sin_zero), 8); 
-    r = bind(serverfd, (struct sockaddr*)&server, len);
-    if(r == -1){
+    r = bind(serverfd, (struct sockaddr*) &server, len);
+    if(r == -1){                                                                    // Verificación de error.
         perror("La dirección IP no pudo ser asignada.\n");
         exit(EXIT_FAILURE);
     }
     r = listen(serverfd, BACKLOG);                                                  // Se pone el servidor a la escucha de solicitudes entrantes.
-    if(r == -1){
+    if(r == -1){                                                                    // Verificación de error.
         perror("El servidor no puede escuchar conexiones.\n");
         exit(EXIT_FAILURE);
     }
@@ -91,44 +99,78 @@ int main(){
 
     int i = 0;
     while(true){
-        if(i<CurrentUsers){
-            int l = 0;
-            int solicitud = (clientsConnected+i)->idSolicitud;
-            if(solicitud == 1){
+        int l = 0;
+        int solicitud = clientsConnected[i]->idSolicitud;
+        switch(solicitud){
+            case 1: {
                 size_t dogSize = sizeof(struct dogType);
-                struct dogType *new = (struct dogType*)malloc(dogSize);
+                struct dogType *new = (struct dogType*) malloc(dogSize);
                 bzero(new, dogSize);
-                l = recv((clientsConnected+i)->clientfd, new, dogSize, 0);
+                l = recv((clientsConnected[i])->clientfd, new, dogSize, 0);
+                if(l == -1){
+                    perror("No se ha recibido el dato correctamente/n");
+                    free(new);
+                    clientsConnected[i]->idSolicitud = 0;
+                    break;
+                }
                 IngresarRegistro(&table, new);
                 free(new);
-            } else if (solicitud == 2){
+                clientsConnected[i]->idSolicitud = 0;
+                break;
+            }
+            case 2: {
                 long id;
-                l = recv((clientsConnected+i)->clientfd, &id, sizeof(id), 0);
+                l = recv(clientsConnected[i]->clientfd, &id, sizeof(id), 0);
+                if(l == -1){
+                    perror("No se ha recibido el dato correctamente./n");
+                    clientsConnected[i]->idSolicitud = 0;
+                    break;
+                }
                 VerRegistro(id);
-            } else if (solicitud == 3){
+                clientsConnected[i]->idSolicitud = 0;
+                break;
+            }
+            case 3: {
                 long id;
-                l = recv((clientsConnected+i)->clientfd, &id, sizeof(id), 0);
+                l = recv(clientsConnected[i]->clientfd, &id, sizeof(id), 0);
+                if(l == -1){
+                    perror("No se ha recibido el dato correctamente./n");
+                    clientsConnected[i]->idSolicitud = 0;
+                    break;
+                }
                 BorrarRegistro(&table, id);
-            } else if (solicitud == 4){
-                char *nombre = (char *)malloc(32);
+                clientsConnected[i]->idSolicitud = 0;
+                break;
+            }
+            case 4: {
+                char *nombre = (char*)malloc(32);
                 bzero(nombre, 32);
-                l = recv((clientsConnected+i)->clientfd, nombre, 32, 0);
+                l = recv(clientsConnected[i]->clientfd, nombre, 32, 0);
+                if(l == -1){
+                    perror("No se ha recibido el dato correctamente");
+                    free(nombre);
+                    break;
+                }
                 BuscarRegistro(&table, nombre);
                 free(nombre);
-            } else if (solicitud == 5){
-                //Semaforo
+                clientsConnected[i]->idSolicitud = 0;
+                break;
+            }
+            case 5: {
+                //TODO: Semaforo
                 for(int j = i; i < CurrentUsers-1; j++){
-                    *(clientsConnected+j) = *(clientsConnected+j+1);
+                    clientsConnected[j] = clientsConnected[j+1];
                 }
                 CurrentUsers--;
+                clientsConnected[i]->idSolicitud = 0;
+                break;
             }
-            (clientsConnected+i)->idSolicitud = 0;
-            i++;
-        } else {
-            i = 0;
+        }
+        (clientsConnected[i])->idSolicitud = 0;
+        if(CurrentUsers != 0){
+            i = (i+1)%CurrentUsers;
         }
     }
-    DisposeConsole();
-
+    
     return 0;
 }
