@@ -4,8 +4,8 @@
 
 //Funciones correspondientes a las opciones indicadas.
 struct dogType IngresarRegistro();
-void VerRegistro();
-void BorrarRegistro();
-void BuscarRegistro();
+long VerRegistro();
+long BorrarRegistro();
+char* BuscarRegistro();
 
 #endif

@@ -7,6 +7,8 @@
 #include <netinet/in.h>
 #include <strings.h>
 #include "Functions.h"
+#include "ShippingData.h"
+#include "Opciones.h"
 
 #define PORT 1234
 
@@ -43,9 +45,10 @@ int main(){
 
     _Bool quit = false;
     int MenuOption;
+    char *answer = malloc(32);
     while(!quit){                                       //Mientras el usuario no pida salir, imprimir el menú.
         fflush(stdin);                        
-        printw("\nPractica 1 - Sistemas Operativos 2019-II.\n\n");
+        printw("Practica 2 - Sistemas Operativos 2019-II.\n\n");
         printw("1. Ingresar registro.\n");
         printw("2. Ver registro.\n");
         printw("3. Borrar registro.\n");
@@ -54,35 +57,48 @@ int main(){
         printw("Esperando opción: ");
         scanw("%hi",&MenuOption);
         printw("\n");
+        bzero(answer, 32);
+        int s = 0, l = 0;
 
         //Evaluación de las opciones de menú.
-        switch (MenuOption){
-        case 1:
-            
-            break;
-        case 2:
-            
-            break;
-        case 3:
-            
-            break;
-        case 4:
-            
-            break;
-        case 5:
-            
-            break;
-        case 31415:
-            
-            break;
-        default: 
+        if(MenuOption == 1){
+            struct dogType new = IngresarRegistro();
+            s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
+            s += send(clientfd, &new, sizeof(new), 0);
+            l = recv(clientfd, answer, 32, 0);
+            printw("%s\n", answer);
+        } else if(MenuOption == 2){
+            long id = VerRegistro();
+            s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
+            s += send(clientfd, &id, sizeof(id), 0);
+            //Y hay que recibir el archivo
+            l = recv(clientfd, answer, 32, 0);
+            printw("\n\n%s\n", answer);
+        } else if(MenuOption == 3){
+            long id = BorrarRegistro();
+            s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
+            s += send(clientfd, &id, sizeof(id), 0);
+            l = recv(clientfd, answer, 32, 0);
+            printw("\n\n%s\n", answer);
+        } else if(MenuOption == 4){
+            char *nombre = BuscarRegistro();
+            s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
+            s += send(clientfd, nombre, 32, 0);
+            l = recv(clientfd, answer, 32, 0);
+            printw("\n\n%s\n", answer);
+            free(nombre);
+        } else if(MenuOption == 5){
+            quit = true;
+        } else {
             printw("El valor \"%hi\" no es valido.\n\n",MenuOption);
-            endwin();
-            exit(-1);
-            break;
         }
+        printw("\nPulse cualquier tecla para continuar...\n");                  // Espera por una tecla para continuar.
+        noecho();                                                               // Impide que se muestre el caracter en consola.
+        getch();                                                                // Obtiene el caracter.
+        echo();                                                                 // Permite de nuevo el ingreso de caracteres.
+        clear();   
     }
-
+    free(answer);
     PressToContinue();
     DisposeConsole();
     return 0;
