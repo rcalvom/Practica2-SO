@@ -9,16 +9,15 @@
 
 //Opción del menú Ingresar Registro.
 int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
-    int r = 0;
-    long id;
+    int r = 0; long id;
     FILE *dataDogs, *historia;
     char *values, *mensajeHistoria, *filepath, *filename;
 
     dataDogs = fopen("dataDogs.dat","a");
     filepath = (char*) malloc(46);
     filename = (char*) malloc(16);
-    mensajeHistoria = (char*)malloc(1);
-    values = (char*)malloc(10);
+    mensajeHistoria = (char*) malloc(1);
+    values = (char*) malloc(10);
 
     if(dataDogs == NULL || filepath == NULL || filename == NULL || mensajeHistoria == NULL || values == NULL){
         asm("DALL:");
@@ -29,10 +28,12 @@ int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
         free(values);
         return -1;
     }
+    
     id = insertElement(tabla, new->name, 0);
     bzero(filename, 16);
     bzero(filepath, 46);
-    *mensajeHistoria = '\0';
+    //*mensajeHistoria = '\0';
+    bzero(mensajeHistoria,1);
     bzero(values, 10);
 
     sprintf(filename,"%li", id);
@@ -50,7 +51,8 @@ int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
 
     do{
         r += fwrite(&id, sizeof(long), 1, dataDogs);                            // Se escribe en el archivo la Id correspondiente.
-    } while(r<1);
+    } while(r < 1);
+
     do{
         r += fwrite(new, sizeof(struct dogType), 1, dataDogs);                  // Se escriben los datos de la mascota anteriormente solicitados en el archivo.
     } while (r < 2);
@@ -74,7 +76,7 @@ int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
     strcat(mensajeHistoria,&new->gender);
     r = 0;
     do{
-        r += fwrite(mensajeHistoria,strlen(mensajeHistoria),1,historia);
+        r += fwrite(mensajeHistoria, strlen(mensajeHistoria), 1, historia);
     } while(r < 1);
 
     fclose(historia);
@@ -88,16 +90,115 @@ int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
 
 //Opción del menú Ver Registro.
 int VerRegistro(long id){
+    char* idchar = (char*) malloc(5);
+    char* filepath = (char*) malloc(46);
+    char* batch = (char*) malloc(46);
+    bzero(idchar, 5);
+    bzero(filepath, 46);
+    bzero(batch, 46);
+    if(filepath == NULL || batch == NULL){
+        return -1;
+    }
+    strcat(filepath,"historias/");
+    sprintf(idchar,"%li",id);
+    strcat(filepath,idchar);
+    strcat(filepath,".dat");
+    strcat(batch,"nano ");
+    strcat(batch,filepath);
+    FILE* file = fopen(filepath,"r");                                       // Se comprueba si el archivo existe.
+    if(file == NULL){
+        // NO existe.
+    }else{
+        // Si existe.
+        
+    }
+    free(idchar);                                                           // librera memoria.
+    free(filepath);
+    free(batch); 
+    if(file != NULL){
+        fclose(file);
+    }
     return 0;
 }
 
 //Opción del menú Borrar Registro.
 int BorrarRegistro(struct HashTable* tabla, long id){
+    struct dogType *registro = (struct dogType*) malloc(sizeof(struct dogType));     // Declara variables que se van a utilizar.
+    long id, idTemp;
+    int r, registros;
+    FILE *file, *temp;
+
+    bzero(registro, sizeof(struct dogType));
+
+    /*do{
+        registros = contarRegistros(tabla);
+
+        Enviar la cantidad de registros.
+
+    }while(registros == -1);*/
+
+    /*if(id == -1){
+        asm("jmp End");
+    }*/
+
+    file = fopen("dataDogs.dat","r");                                               // Se abre un archivo que contiene las estructuras..
+    temp = fopen("temp.dat","w+");                                                  // Se crea un archivo temporal donde se guardaran las estructuras que nos serán eliminadas.
+    if(file == NULL || temp == NULL){
+        return -1;
+    }
+    do{                                                                             // Mientras el archivo aún tenga estructuras....
+        r = fread(&idTemp,sizeof(long),1,file);
+        if(r == 0){
+            break;
+        }
+        r = fread(registro,sizeof(struct dogType),1,file);                          // ..... Lea los datos .....
+        if(r == 0){
+            return -1;
+        }else if(idTemp == id){
+            continue;                                                               // ... y exceptuando el que se va a eliminnar...
+        }
+        r = fwrite(&idTemp,sizeof(long),1,temp);                                    // ... Escribirlos todos en el archivo temporal
+        if(r == 0){
+            return -1;
+        }
+        r = fwrite(registro,sizeof(struct dogType),1,temp);
+        if(r == 0){
+            return -1;
+        }
+    }while(feof(file) == 0);
+
+    fclose(file);
+    fclose(temp);
+    remove("dataDogs.dat");                                                         // Se elimina el archivo viejo y ....
+    rename("temp.dat","dataDogs.dat");                                              // ... Se renombra el archivo temporal
+    char* his = (char*) malloc(46);
+    char* his1 = (char*) malloc(5);
+    bzero(his,46);
+    bzero(his1,5);
+    strcat(his,"rm historias/");                                                    // Se elimina el archivo de historia clinica usando un bach del sistema.
+    sprintf(his1,"%li",id);
+    strcat(his,his1);
+    strcat(his,".dat");
+    system(his);
+    free(his);
+    free(his1);
+    borrar(tabla, id);
+    asm("End:");
+    free(registro); 
     return 0;
 }
 
 //Opción del menú Buscar Registro.
 int BuscarRegistro(struct HashTable* tabla, char *nombre){
+    char *nameToSearch = (char *) malloc(32);
+    if(nameToSearch == NULL){
+        return -1;
+    }
+    bzero(nameToSearch, 32);
+
+    //buscarId(tabla, nameToSearch);                                          // Se pide a la tabla que imprima los elementos que contengan el nombre dado.
+
+    free(nameToSearch);
     return 0;
 }
 

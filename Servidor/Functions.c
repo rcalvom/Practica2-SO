@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <time.h>
 #include "Functions.h"
 
 // Bloquea el subproceso hasta que el usuario pulse una tecla para continuar.
@@ -72,11 +73,62 @@ void toLowerCase(char *word){
     }
 }
 
-//copia el cada caracter de la cadena original en la cadena copia
+//Copia el cada caracter de la cadena original en la cadena copia
 void CopyString(char *original, char *copia){
     for(int i = 0; i<SIZE; i++){
         *(copia+i) = *(original+i);
         if(*(original+i) == '\0')
             break;
     }
+}
+
+// Escribe el archivo de registro con la información pertinente.
+void WriteLog(int opcion, char* IP, char* Registro){
+    int r;
+    time_t t; struct tm *tm;
+    char* log = malloc(256);
+    char date[50];
+    FILE *file;
+
+    file = fopen("serverDogs.log","a");
+    if(file == NULL){
+        perror("El archivo de registro no pudo ser abierto.\n");
+        return;
+    }
+
+    t = time(NULL);
+    tm = localtime(&t);
+    strftime(date,50,"%Y%m%d%H%M%S",tm);
+
+    strcat(log,"[Fecha ");
+    strcat(log,date);
+    strcat(log,"] Cliente[");
+    strcat(log,IP);
+    switch (opcion){
+        case 1:
+            strcat(log,"] [Insersión] [");
+            break;
+        case 2:
+            strcat(log,"] [Lectura] [");
+            break;
+        case 3:
+            strcat(log,"] [Borrado] [");
+            break;
+        case 4:
+            strcat(log,"] [Búsqueda] [");
+            break;
+    }
+
+    strcat(log,Registro);
+    strcat(log,"]\n");
+
+
+    r = fwrite(log,strlen(log),1,file);
+    if(r == 0){
+        perror("El archivo de registros no pudo ser escrito.\n");
+        return;
+    }
+
+    fclose(file);
+    free(log);
 }

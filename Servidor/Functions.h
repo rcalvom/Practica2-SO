@@ -11,5 +11,6 @@ char* IntToString(unsigned int toConvert);
 void toUpperCase(char *word);
 void toLowerCase(char *word);
 void CopyString(char *original, char *copy);
+void WriteLog(int opcion, char* IP, char* Registro);
 
 #endif

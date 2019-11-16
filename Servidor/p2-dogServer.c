@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <string.h>
+#include <strings.h>
 #include "Functions.h"
 #include "Hash.h"
 #include "ShippingData.h"
@@ -110,12 +112,13 @@ int main(){
                 bzero(new, dogSize);
                 l = recv((clientsConnected[i])->clientfd, new, dogSize, 0);
                 if(l == -1){
-                    perror("No se ha recibido el dato correctamente/n");
+                    perror("No se ha recibido el dato correctamente.\n");
                     free(new);
                     clientsConnected[i]->idSolicitud = 0;
                     break;
                 }
                 IngresarRegistro(&table, new);
+                WriteLog(1,inet_ntoa(clientsConnected[i]->Ip),new->name);
                 free(new);
                 clientsConnected[i]->idSolicitud = 0;
                 break;
@@ -124,24 +127,32 @@ int main(){
                 long id;
                 l = recv(clientsConnected[i]->clientfd, &id, sizeof(id), 0);
                 if(l == -1){
-                    perror("No se ha recibido el dato correctamente./n");
+                    perror("No se ha recibido el dato correctamente.\n");
                     clientsConnected[i]->idSolicitud = 0;
                     break;
                 }
                 VerRegistro(id);
+                char* idString = malloc (10);
+                sprintf(idString,"%li",id);
+                WriteLog(2,inet_ntoa(clientsConnected[i]->Ip),idString);
                 clientsConnected[i]->idSolicitud = 0;
+                free(idString);
                 break;
             }
             case 3: {
                 long id;
                 l = recv(clientsConnected[i]->clientfd, &id, sizeof(id), 0);
                 if(l == -1){
-                    perror("No se ha recibido el dato correctamente./n");
+                    perror("No se ha recibido el dato correctamente.\n");
                     clientsConnected[i]->idSolicitud = 0;
                     break;
                 }
                 BorrarRegistro(&table, id);
+                char* idString = malloc (10);
+                sprintf(idString,"%li",id);
+                WriteLog(3,inet_ntoa(clientsConnected[i]->Ip),idString);
                 clientsConnected[i]->idSolicitud = 0;
+                free(idString);
                 break;
             }
             case 4: {
@@ -149,11 +160,12 @@ int main(){
                 bzero(nombre, 32);
                 l = recv(clientsConnected[i]->clientfd, nombre, 32, 0);
                 if(l == -1){
-                    perror("No se ha recibido el dato correctamente");
+                    perror("No se ha recibido el dato correctamente.\n");
                     free(nombre);
                     break;
                 }
                 BuscarRegistro(&table, nombre);
+                WriteLog(4,inet_ntoa(clientsConnected[i]->Ip),nombre);
                 free(nombre);
                 clientsConnected[i]->idSolicitud = 0;
                 break;
