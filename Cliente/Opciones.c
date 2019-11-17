@@ -6,10 +6,8 @@
 
 struct dogType IngresarRegistro(){
     struct dogType new;
+    bzero(&new,sizeof(struct dogType));
     int r = 0;
-    //char* tipo;
-    //tipo = (char *) malloc(32);
-    //bzero(tipo, 32);
     printw("Ingresar registro:\n");                                         // Se piden los datos y se almacenan en la estructura.
     printw("Indique el nombre de la mascota: ");
     scanw("%s", &new.name[0]);

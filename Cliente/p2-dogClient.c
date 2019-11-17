@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <strings.h>
+#include <unistd.h>
 #include "Functions.h"
 #include "ShippingData.h"
 #include "Opciones.h"
@@ -13,10 +14,9 @@
 #define PORT 1234
 
 int main(){
-    InitConsole();
 
+    InitConsole();
     char* ipAddress = malloc(15);
-    
     printw("Bienvenido a la apliación cliente.\n\n");
     printw("Ingrese la dirección ip del servidor: ");
     scanw("%s",ipAddress);                              // Solicita la dirección ip del servidor.
@@ -43,9 +43,11 @@ int main(){
         exit(EXIT_SUCCESS);
     }
 
+    printw("Se ha logrado conectar al servidor correctamente.");
+    PressToContinue();
+
     _Bool quit = false;
     int MenuOption;
-    char *answer = malloc(32);
     while(!quit){                                       //Mientras el usuario no pida salir, imprimir el menú.
         fflush(stdin);                        
         printw("Practica 2 - Sistemas Operativos 2019-II.\n\n");
@@ -55,51 +57,64 @@ int main(){
         printw("4. Buscar registro.\n");
         printw("5. Salir.\n\n");
         printw("Esperando opción: ");
-        scanw("%hi",&MenuOption);
+        scanw("%i",&MenuOption);
         printw("\n");
-        bzero(answer, 32);
         int s = 0, l = 0;
 
         //Evaluación de las opciones de menú.
-        if(MenuOption == 1){
-            struct dogType new = IngresarRegistro();
-            s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
-            s += send(clientfd, &new, sizeof(new), 0);
-            l = recv(clientfd, answer, 32, 0);
-            printw("%s\n", answer);
-        } else if(MenuOption == 2){
-            long id = VerRegistro();
-            s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
-            s += send(clientfd, &id, sizeof(id), 0);
-            //Y hay que recibir el archivo
-            l = recv(clientfd, answer, 32, 0);
-            printw("\n\n%s\n", answer);
-        } else if(MenuOption == 3){
-            long id = BorrarRegistro();
-            s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
-            s += send(clientfd, &id, sizeof(id), 0);
-            l = recv(clientfd, answer, 32, 0);
-            printw("\n\n%s\n", answer);
-        } else if(MenuOption == 4){
-            char *nombre = BuscarRegistro();
-            s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
-            s += send(clientfd, nombre, 32, 0);
-            l = recv(clientfd, answer, 32, 0);
-            printw("\n\n%s\n", answer);
-            free(nombre);
-        } else if(MenuOption == 5){
-            quit = true;
-        } else {
-            printw("El valor \"%hi\" no es valido.\n\n",MenuOption);
+        switch (MenuOption){
+            case 1:{
+                _Bool answer;
+                struct dogType new = IngresarRegistro();
+                printw("Enviando registro al servidor...\n");
+                s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
+                s += send(clientfd, &new, sizeof(new), 0);
+                l = recv(clientfd, &answer, sizeof(_Bool), 0);
+                if(answer){
+                    printw("Los datos de %s se han registrado correctamente.\n",new.name);
+                }else{
+                    printw("No se ha registrado a la mascota correctamente.\n");
+                }
+                break;
+            }
+            case 2:{
+                /*long id = VerRegistro();
+                s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
+                s += send(clientfd, &id, sizeof(id), 0);
+                //Y hay que recibir el archivo
+                l = recv(clientfd, answer, 32, 0);
+                printw("\n\n%s\n", answer);*/
+                break;
+            }
+            case 3:{
+                /*long id = BorrarRegistro();
+                s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
+                s += send(clientfd, &id, sizeof(id), 0);
+                l = recv(clientfd, answer, 32, 0);
+                printw("\n\n%s\n", answer);*/
+                break;
+            }    
+            case 4:{
+                /*char *nombre = BuscarRegistro();
+                s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
+                s += send(clientfd, nombre, 32, 0);
+                l = recv(clientfd, answer, 32, 0);
+                printw("\n\n%s\n", answer);
+                free(nombre);*/
+                break;
+            } 
+            case 5:{
+                quit = true;
+                break;
+            }                   
+            
+            default:{
+                printw("El valor \"%hi\" no es valido.\n\n",MenuOption);
+            }
+                
         }
-        printw("\nPulse cualquier tecla para continuar...\n");                  // Espera por una tecla para continuar.
-        noecho();                                                               // Impide que se muestre el caracter en consola.
-        getch();                                                                // Obtiene el caracter.
-        echo();                                                                 // Permite de nuevo el ingreso de caracteres.
-        clear();   
+        PressToContinue();
     }
-    free(answer);
-    PressToContinue();
     DisposeConsole();
     return 0;
 }

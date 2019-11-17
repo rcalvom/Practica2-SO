@@ -16,7 +16,7 @@ int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
     dataDogs = fopen("dataDogs.dat","a");
     filepath = (char*) malloc(46);
     filename = (char*) malloc(16);
-    mensajeHistoria = (char*) malloc(1);
+    mensajeHistoria = (char*) malloc(200);
     values = (char*) malloc(10);
 
     if(dataDogs == NULL || filepath == NULL || filename == NULL || mensajeHistoria == NULL || values == NULL){
@@ -28,12 +28,10 @@ int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
         free(values);
         return -1;
     }
-    
-    id = insertElement(tabla, new->name, 0);
+    id = /*insertElement(tabla, new->name, 0)*/1;
     bzero(filename, 16);
     bzero(filepath, 46);
-    //*mensajeHistoria = '\0';
-    bzero(mensajeHistoria,1);
+    bzero(mensajeHistoria,200);
     bzero(values, 10);
 
     sprintf(filename,"%li", id);
@@ -74,16 +72,17 @@ int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
     strcat(mensajeHistoria,values);
     strcat(mensajeHistoria,"\nGénero: ");
     strcat(mensajeHistoria,&new->gender);
+
     r = 0;
     do{
         r += fwrite(mensajeHistoria, strlen(mensajeHistoria), 1, historia);
     } while(r < 1);
 
+    fclose(dataDogs);
     fclose(historia);
+    free(mensajeHistoria);
     free(filename);
     free(filepath);
-    free(dataDogs);
-    free(mensajeHistoria);
     free(values);
     return 0;
 }
@@ -124,7 +123,7 @@ int VerRegistro(long id){
 //Opción del menú Borrar Registro.
 int BorrarRegistro(struct HashTable* tabla, long id){
     struct dogType *registro = (struct dogType*) malloc(sizeof(struct dogType));     // Declara variables que se van a utilizar.
-    long id, idTemp;
+    long idTemp;
     int r, registros;
     FILE *file, *temp;
 
@@ -221,7 +220,7 @@ int Generado(struct HashTable* tabla){
             r += fread(newRegister, sizeof(struct dogType), 1, file);
             if(r == 1) attempts++;
         } while(r == 1 && attempts < 5);
-        if(attempts <5){
+        if(attempts < 5){
             filepath = (char*) malloc(46);                                         // Se libera espacio para la ruta de la historia clinica.
             filename = (char*) malloc(16);
             bzero(filepath, 46);
@@ -233,7 +232,6 @@ int Generado(struct HashTable* tabla){
             toLowerCase(filepath);
             historia = fopen(filepath,"w+");                                        // Se crea el archivo de historia clinica.
             if(historia == NULL){
-                printw("No se ha podido crear la historia\n");
                 return -1;
             }
             mensajeHistoria = (char*) malloc(175);
@@ -260,7 +258,6 @@ int Generado(struct HashTable* tabla){
             r = 0;
             r += fwrite(mensajeHistoria,strlen(mensajeHistoria),1,historia);
             if(r == 0){
-                printw("El archivo de historia clinica no ha podido ser escrito.");
                 return -1;
             }
             fclose(historia);

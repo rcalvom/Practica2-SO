@@ -1,4 +1,3 @@
-#include <ncurses.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -36,18 +35,18 @@ struct Client* clientsConnected[BACKLOG];
 void* ListenRequest(void* client){
     struct Client *toListen = (struct Client*)client;
     printf("Escuchando peticiones del cliente %s ...\n\n",inet_ntoa(toListen->Ip));
-    while(true){                                                                     
+   for(;;){                                                                     
         while(toListen->idSolicitud != 0){                                              
             sleep(1);
         }
-        int rec = recv(toListen->clientfd, &toListen->idSolicitud, sizeof(int), 0);     
+        int rec = recv(toListen->clientfd, &toListen->idSolicitud, sizeof(int), 0);   
     }
 }
 
 // Método para hilo que se encarga de estar a la escucha de nuevas solicitudes entrantes.
 void* ListenConections(void* clients){
     CurrentUsers = 0;
-    while(true){
+    for(;;){
         int clientfd = accept(serverfd, (struct sockaddr*) &clientfd, &len);        // Se acepta una solicitud de conexión entrante.
         clientsConnected[CurrentUsers]->Ip.s_addr = clientfd;
         if(clientfd == -1){
@@ -86,6 +85,12 @@ int main(){
     server.sin_port = htons(PORT);
     server.sin_addr.s_addr = INADDR_ANY;
     bzero((server.sin_zero), 8); 
+
+    if(setsockopt(serverfd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) < 0){ // Libera el puerto para que pueda ser utilizado.
+        perror("Error liberando dirección Ip.");
+        exit(-1);
+    }
+
     r = bind(serverfd, (struct sockaddr*) &server, len);
     if(r == -1){                                                                    // Verificación de error.
         perror("La dirección IP no pudo ser asignada.\n");
@@ -102,11 +107,12 @@ int main(){
     pthread_create(&ListenThread,NULL,ListenConections, clientsConnected);          // Se crea un hilo que se encarga de escuchar conexiónes entrantes.
 
     int i = 0;
-    while(true){
+    for(;;){
         int l = 0;
         int solicitud = clientsConnected[i]->idSolicitud;
         switch(solicitud){
             case 1: {
+                _Bool answer = 1;
                 size_t dogSize = sizeof(struct dogType);
                 struct dogType *new = (struct dogType*) malloc(dogSize);
                 bzero(new, dogSize);
@@ -117,7 +123,11 @@ int main(){
                     clientsConnected[i]->idSolicitud = 0;
                     break;
                 }
-                IngresarRegistro(&table, new);
+                int a = IngresarRegistro(&table, new); 
+                if(a == -1){
+                    answer = 0;
+                }
+                l = send(clientsConnected[i]->clientfd,&answer,sizeof(_Bool),0);
                 WriteLog(1,inet_ntoa(clientsConnected[i]->Ip),new->name);
                 free(new);
                 clientsConnected[i]->idSolicitud = 0;

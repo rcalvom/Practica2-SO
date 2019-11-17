@@ -1,32 +1,9 @@
-#include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <time.h>
 #include "Functions.h"
-
-// Bloquea el subproceso hasta que el usuario pulse una tecla para continuar.
-void PressToContinue(){
-    printw("\nPulse cualquier tecla para continuar...\n");                        // Espera por una tecla para continuar.
-    noecho();                                                                     // Impide que se muestre el caracter en consola.
-    getch();                                                                      // Obtiene el caracter.
-    echo();                                                                       // Permite de nuevo el ingreso de caracteres.
-    clear();
-}
-
-// Inicializa la configuración de ncurses en la consola.
-void InitConsole(){
-    initscr();                                                                   //Inicializa la consola para uso de la libreria ncurses.
-    clear();                                                                     //Limpia la consola.
-    refresh();                                                                   //Refresca la consola para poder ser escrita.
-}
-
-// Elimina la configuración de ncurses en la consola.
-void DisposeConsole(){
-    clear();
-    endwin();                                                                   //Antes de finalizar, elimina la configuración hecha sobre la consola por parte de la libreria ncurses.
-}
 
 // Determina si dos cadenas de carcteres son iguales
 _Bool equals(char *String1, char *String2){
@@ -87,7 +64,9 @@ void WriteLog(int opcion, char* IP, char* Registro){
     int r;
     time_t t; struct tm *tm;
     char* log = malloc(256);
-    char date[50];
+    bzero(log,256);
+    char* date = malloc(50);
+    bzero(date,50);
     FILE *file;
 
     file = fopen("serverDogs.log","a");
@@ -122,7 +101,6 @@ void WriteLog(int opcion, char* IP, char* Registro){
     strcat(log,Registro);
     strcat(log,"]\n");
 
-
     r = fwrite(log,strlen(log),1,file);
     if(r == 0){
         perror("El archivo de registros no pudo ser escrito.\n");
@@ -131,4 +109,5 @@ void WriteLog(int opcion, char* IP, char* Registro){
 
     fclose(file);
     free(log);
+    free(date);
 }
