@@ -1,5 +1,5 @@
 #include "Hash.h"
-#include "Functions.h"
+#include "Funciones.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
