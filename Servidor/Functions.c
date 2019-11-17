@@ -84,18 +84,22 @@ void WriteLog(int opcion, char* IP, char* Registro){
     strcat(log,"] Cliente[");
     strcat(log,IP);
     switch (opcion){
-        case 1:
+        case 1:{
             strcat(log,"] [Insersión] [");
             break;
-        case 2:
+        }
+        case 2:{
             strcat(log,"] [Lectura] [");
             break;
-        case 3:
+        }
+        case 3:{
             strcat(log,"] [Borrado] [");
             break;
-        case 4:
+        }
+        case 4:{
             strcat(log,"] [Búsqueda] [");
             break;
+        }
     }
 
     strcat(log,Registro);
@@ -111,3 +115,23 @@ void WriteLog(int opcion, char* IP, char* Registro){
     free(log);
     free(date);
 }
+
+// Dada una id, devuelve la ruta de la historia clinica asociada a esa id.
+char* FilePath(long id){
+    char* idchar = (char*) malloc(5);
+    char* filepath = (char*) malloc(46);
+    /*if(filepath == NULL){
+        return NULL;
+    }*/
+    bzero(idchar, 5);
+    bzero(filepath, 46);
+    strcat(filepath,"historias/");
+    sprintf(idchar,"%li",id);
+    strcat(filepath,idchar);
+    strcat(filepath,".dat");
+    free(idchar);
+    free(filepath);
+    printf("Ruta FilePath: %s \n",filepath+1);
+    return filepath;
+}
+

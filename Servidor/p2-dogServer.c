@@ -31,7 +31,7 @@ socklen_t len;
 int CurrentUsers;
 struct Client* clientsConnected[BACKLOG];
 
-// Método para el hilo que se encarga de recibir datos de los clientes.
+// Método para el hilo que se encarga de recibir datos de los clientes y ejecutar las solicitudes.
 void* ListenRequest(void* client){
     struct Client *toListen = (struct Client*)client;
     printf("Escuchando peticiones del cliente %s ...\n\n",inet_ntoa(toListen->Ip));
@@ -39,7 +39,8 @@ void* ListenRequest(void* client){
         while(toListen->idSolicitud != 0){                                              
             sleep(1);
         }
-        int rec = recv(toListen->clientfd, &toListen->idSolicitud, sizeof(int), 0);   
+        int rec = recv(toListen->clientfd, &toListen->idSolicitud, sizeof(int), 0); 
+        printf("id recibida: %i",toListen->idSolicitud);  
     }
 }
 
@@ -128,6 +129,12 @@ int main(){
                     answer = 0;
                 }
                 l = send(clientsConnected[i]->clientfd,&answer,sizeof(_Bool),0);
+                if(l == -1){
+                    perror("No se ha recibido el dato correctamente.\n");
+                    free(new);
+                    clientsConnected[i]->idSolicitud = 0;
+                    break;
+                }
                 WriteLog(1,inet_ntoa(clientsConnected[i]->Ip),new->name);
                 free(new);
                 clientsConnected[i]->idSolicitud = 0;
@@ -135,13 +142,40 @@ int main(){
             }
             case 2: {
                 long id;
+                _Bool existsFile, answerClient;
                 l = recv(clientsConnected[i]->clientfd, &id, sizeof(id), 0);
-                if(l == -1){
-                    perror("No se ha recibido el dato correctamente.\n");
-                    clientsConnected[i]->idSolicitud = 0;
-                    break;
+                existsFile = ExisteRegistro(id);
+
+                if(existsFile == 1){                   //Si la historia existe.
+                
+                    l = send(clientsConnected[i]->clientfd,&existsFile,sizeof(_Bool),0);
+                    l = recv(clientsConnected[i]->clientfd,&answerClient,sizeof(_Bool),0);
+                    
+                    if(answerClient == 1){
+                        FILE *file;
+                        char* data, *path;
+                        path = FilePath(id);
+                        file = fopen(path,"r");
+                        fseek(file,0L,SEEK_END);
+                        long size = ftell(file);
+                        l = send(clientsConnected[i]->clientfd,&size,sizeof(size),0);
+                        data = malloc(size);
+                        bzero(data,size);
+                        fread(data,size,1,file);
+                        l = send(clientsConnected[i]->clientfd,data,size,0);
+                        l = recv(clientsConnected[i]->clientfd,&size,sizeof(size),0);
+                        l = recv(clientsConnected[i]->clientfd,data,size,0);
+                        fclose(file);
+                        fopen(path,"w+");
+                        fwrite(data,size,1,file);
+                        fclose(file);
+                        free(data);
+                        free(path);
+                    }
+                }else{          //Si no existe...
+                    l = send(clientsConnected[i]->clientfd,&existsFile,sizeof(_Bool),0);
                 }
-                VerRegistro(id);
+
                 char* idString = malloc (10);
                 sprintf(idString,"%li",id);
                 WriteLog(2,inet_ntoa(clientsConnected[i]->Ip),idString);
@@ -151,12 +185,15 @@ int main(){
             }
             case 3: {
                 long id;
+                //Enviar la cantidad de registros.
+
                 l = recv(clientsConnected[i]->clientfd, &id, sizeof(id), 0);
                 if(l == -1){
                     perror("No se ha recibido el dato correctamente.\n");
                     clientsConnected[i]->idSolicitud = 0;
                     break;
                 }
+                
                 BorrarRegistro(&table, id);
                 char* idString = malloc (10);
                 sprintf(idString,"%li",id);
@@ -175,6 +212,7 @@ int main(){
                     break;
                 }
                 BuscarRegistro(&table, nombre);
+                // Enviar registros.
                 WriteLog(4,inet_ntoa(clientsConnected[i]->Ip),nombre);
                 free(nombre);
                 clientsConnected[i]->idSolicitud = 0;

@@ -28,7 +28,7 @@ int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
         free(values);
         return -1;
     }
-    id = /*insertElement(tabla, new->name, 0)*/1;
+    id = /*insertElement(tabla, new->name, 1)*/1;
     bzero(filename, 16);
     bzero(filepath, 46);
     bzero(mensajeHistoria,200);
@@ -87,8 +87,27 @@ int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
     return 0;
 }
 
-//Opción del menú Ver Registro.
-int VerRegistro(long id){
+// Verifica si existe la historia con la id indicada.
+_Bool ExisteRegistro(long id){
+    char* filepath = FilePath(id);
+    printf("Ruta: %s",filepath);
+    FILE* file = fopen(filepath,"r");                                       // Se comprueba si el archivo existe.
+    if(file == NULL){
+        free(filepath);
+        if(file != NULL){
+            fclose(file);
+        }
+        return 0;
+    }else{
+        free(filepath);
+        if(file != NULL){
+            fclose(file);
+        }
+        return 1;
+    }
+}
+
+int VerRegistro2(long id){
     char* idchar = (char*) malloc(5);
     char* filepath = (char*) malloc(46);
     char* batch = (char*) malloc(46);
@@ -106,9 +125,9 @@ int VerRegistro(long id){
     strcat(batch,filepath);
     FILE* file = fopen(filepath,"r");                                       // Se comprueba si el archivo existe.
     if(file == NULL){
-        // NO existe.
+        return -1;
     }else{
-        // Si existe.
+        return 0;
         
     }
     free(idchar);                                                           // librera memoria.

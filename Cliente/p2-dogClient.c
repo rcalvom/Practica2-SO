@@ -78,12 +78,50 @@ int main(){
                 break;
             }
             case 2:{
-                /*long id = VerRegistro();
+                _Bool existFile, request;
+                char clientAnswer;
+                long id = VerRegistro();
                 s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
-                s += send(clientfd, &id, sizeof(id), 0);
-                //Y hay que recibir el archivo
-                l = recv(clientfd, answer, 32, 0);
-                printw("\n\n%s\n", answer);*/
+                printw("Enviando id al servidor...\n");
+                s = send(clientfd, &id,sizeof(id),0);
+                s = recv(clientfd, &existFile, sizeof(_Bool),0);
+                if(existFile == 1){ // Si el archivo si existe.
+                    printw("El registro con la id ingresada si existe en el sistema.\n");
+                    printw("¿Desea abrirlo? (Y/N) . ");
+                    scanf("%s",&clientAnswer);
+                    if(clientAnswer == 'Y' || clientAnswer == 'y'){
+                        FILE *file;
+                        char *data;
+                        int size;
+                        request = 1;
+                        s = send(clientfd, &request, sizeof(request), 0);
+                        s = recv(clientfd, &size, sizeof(size), 0);
+                        data = malloc(size);
+                        bzero(data,size);
+                        file = fopen("HistoriaClinica.dat","w+");
+                        s = recv(clientfd,data,size,0);
+                        fwrite(data,size,1,file);
+                        fclose(file);
+                        system("nano HistoriaClinica.dat");
+                        file = fopen("HistoriaClinica.dat","r");
+                        fread(data,size,1,file);
+                        fseek(file,0L,SEEK_END);
+                        fclose(file);
+                        size = ftell(file);
+                        s = send(clientfd,&size,sizeof(size),0);
+                        s = send(clientfd,data,size,0);
+
+                        
+                        // Escribir archivo recibido, abrirlo con nano y enviarlo de regreso.
+
+                    }else{
+                        request = 0;
+                        s = send(clientfd, &request, sizeof(request), 0);
+                    }
+                }else{
+                    printw("El registro con la id dada no existe en el sistema.\n");
+                }
+
                 break;
             }
             case 3:{
