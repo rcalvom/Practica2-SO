@@ -131,20 +131,35 @@ int main(){
                 break;
             }
             case 3:{
-                /*long id = BorrarRegistro();
-                s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
-                s += send(clientfd, &id, sizeof(id), 0);
-                l = recv(clientfd, answer, 32, 0);
-                printw("\n\n%s\n", answer);*/
+                long id, NumRegisters;
+                send(clientfd,&MenuOption,sizeof(MenuOption),0);
+
+                recv(clientfd,&NumRegisters,sizeof(NumRegisters),0);
+
+                printw("En el sistema hay %li registros.\n",NumRegisters);
+
+                id = BorrarRegistro();
+
+                if(id != -1){
+                    bool answer = true;
+                    send(clientfd,&answer,sizeof(bool),0);
+                    send(clientfd,&id,sizeof(id),0);
+                    printw("Enviando id al servidor...");
+                    recv(clientfd,&answer,sizeof(answer),0);
+                    if(answer){
+                        printw("El registro no ha podido ser borraro.\n");
+                    }else{
+                        printw("El registro no ha podido ser borraro.\n");
+                    }
+                }else{
+                    bool answer = false;
+                    send(clientfd,&answer,sizeof(answer),0);
+                }
+
                 break;
             }    
             case 4:{
-                /*char *nombre = BuscarRegistro();
-                s = send(clientfd, &MenuOption, sizeof(MenuOption), 0);
-                s += send(clientfd, nombre, 32, 0);
-                l = recv(clientfd, answer, 32, 0);
-                printw("\n\n%s\n", answer);
-                free(nombre);*/
+                
                 break;
             } 
             case 5:{

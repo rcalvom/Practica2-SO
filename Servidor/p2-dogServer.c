@@ -73,8 +73,8 @@ void* ListenRequest(void* args){
                         data = malloc(size);
                         bzero(data,size);
                         fread(data,size,1,file);
-                        fclose(file);
                         send(Client->clientfd,data,size,0);
+                        fclose(file);
                         free(data); 
                         recv(Client->clientfd,&size,sizeof(size),0);
                         data = malloc(size);
@@ -94,9 +94,60 @@ void* ListenRequest(void* args){
                 break;
             }
             case 3:{                        // Si la opción del cliente es Borrar Registro.
+                long NumRegisters = 0/*ContarTabla()*/;
+                long id;
+                bool flag;
+                send(Client->clientfd,&NumRegisters,sizeof(NumRegisters),0);
+                recv(Client->clientfd,&flag,sizeof(flag),0);
+                if(flag){                                       // Si el usuario permite continuar con la operación.
+                    long idTemp;
+                    FILE *file, *temp;
+                    struct dogType* registro = malloc(sizeof(struct dogType));
+                    bzero(registro,sizeof(struct dogType));
+                    recv(Client->clientfd,id,sizeof(id),0);
+
+                    //EliminarTabla(id);
+
+                    file = fopen("dataDogs.dat","r");                                               // Se abre un archivo que contiene las estructuras..
+                    temp = fopen("temp.dat","w+");                                                  // Se crea un archivo temporal donde se guardaran las estructuras que nos serán eliminadas.
+                    do{                                                                             // Mientras el archivo aún tenga estructuras....
+                        if(fread(&idTemp,sizeof(long),1,file) == 0){
+                            break;
+                        }
+                        fread(registro,sizeof(struct dogType),1,file);                          // ..... Lea los datos .....
+                        if(idTemp == id){
+                            continue;                                                               // ... y exceptuando el que se va a eliminnar...
+                        }
+                        fwrite(&idTemp,sizeof(long),1,temp);                                    // ... Escribirlos todos en el archivo temporal
+                        fwrite(registro,sizeof(struct dogType),1,temp);
+                    }while(feof(file) == 0);
+                    fclose(file);
+                    fclose(temp);
+                    remove("dataDogs.dat");                                                         // Se elimina el archivo viejo y ....
+                    rename("temp.dat","dataDogs.dat");
+
+                    remove(FilePath(id));
+                    char* idChar = malloc(10);
+                    sprintf(idChar,"%li",id);
+                    WriteLog(3,inet_ntoa(Client->Ip),idChar);
+                    free(registro);
+                    free(idChar);
+                }
+                option = 0;
                 break;
             }
             case 4:{                        // Si la opción del cliente es Buscar Registro.
+                long id, end = 0;
+                recv(Client->clientfd,&id,sizeof(id),0);
+
+
+                //    send(Client->clientfd,); ¿Cómo enviar los id?
+
+                send(Client->clientfd,&end,sizeof(end),0);
+
+                char* idChar = malloc(10);
+                sprintf(idChar,"%li",id);
+                WriteLog(4,inet_ntoa(Client->Ip),idChar);
                 break;
             }
         }
@@ -108,7 +159,7 @@ void* ListenExit(void* client){
     char exitKey;
     while(true){
         scanf("%s",&exitKey);
-        if(exitKey = 'S'){
+        if(exitKey == 'S'){
             exit(EXIT_SUCCESS);
         }
     }
