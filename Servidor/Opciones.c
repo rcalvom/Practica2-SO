@@ -91,57 +91,6 @@ bool IngresarRegistro(struct HashTable* tabla, struct dogType *new){
     return true;
 }
 
-// Verifica si existe la historia con la id indicada.
-bool ExisteRegistro(long id){
-    char* filepath = FilePath(id);
-    FILE* file = fopen(filepath,"r");
-    if(file == NULL){
-        free(filepath);
-        if(file != NULL){
-            fclose(file);
-        }
-        return false;
-    }else{
-        free(filepath);
-        if(file != NULL){
-            fclose(file);
-        }
-        return true;
-    }
-}
-
-int VerRegistro2(long id){
-    char* idchar = (char*) malloc(5);
-    char* filepath = (char*) malloc(46);
-    char* batch = (char*) malloc(46);
-    bzero(idchar, 5);
-    bzero(filepath, 46);
-    bzero(batch, 46);
-    if(filepath == NULL || batch == NULL){
-        return -1;
-    }
-    strcat(filepath,"historias/");
-    sprintf(idchar,"%li",id);
-    strcat(filepath,idchar);
-    strcat(filepath,".dat");
-    strcat(batch,"nano ");
-    strcat(batch,filepath);
-    FILE* file = fopen(filepath,"r");                                       // Se comprueba si el archivo existe.
-    if(file == NULL){
-        return -1;
-    }else{
-        return 0;
-        
-    }
-    free(idchar);                                                           // librera memoria.
-    free(filepath);
-    free(batch); 
-    if(file != NULL){
-        fclose(file);
-    }
-    return 0;
-}
-
 //Opción del menú Borrar Registro.
 int BorrarRegistro(struct HashTable* tabla, long id){
     struct dogType *registro = (struct dogType*) malloc(sizeof(struct dogType));     // Declara variables que se van a utilizar.

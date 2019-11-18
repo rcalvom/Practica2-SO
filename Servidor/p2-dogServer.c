@@ -18,13 +18,6 @@
 #define PORT 1234
 #define BACKLOG 32
 
-// Estructura que almacena los datos del cliente.
-struct Client{
-    int clientfd;
-    pthread_t idThread;
-    struct in_addr Ip;
-};
-
 // Variables globales.
 int serverfd;
 socklen_t len;
@@ -43,70 +36,68 @@ void* ListenRequest(void* args){
             case 1:{                        // Si la opción del cliente es Ingresar Registro.
                 struct dogType *new = malloc(sizeof(struct dogType));
                 bzero(new,sizeof(struct dogType));
-                recv(Client->clientfd,new,sizeof(struct dogType),0);
-                bool flag = IngresarRegistro(&Table,new);
-                send(Client->clientfd,&flag,sizeof(flag),0);
+                recv(Client->clientfd,new,sizeof(struct dogType),0);            // Recibe la estructura del cliente.
+                bool flag = IngresarRegistro(&Table,new);                       // La ingresa al sistema (Archivo dataDogs.dat y historia.)
+                send(Client->clientfd,&flag,sizeof(flag),0);                    // Envía confirmación al cliente si pudo ingresar el registro.
                 if(flag){
-                    WriteLog(1,inet_ntoa(Client->Ip),new->name);
+                    WriteLog(1,inet_ntoa(Client->Ip),new->name);                // Si se pudo añadir la historia correctamente, Se muestra lo dicho en el Log.
                     printf("Inserción de %s por el cliente %s correctamente...\n",new->name,inet_ntoa(Client->Ip));
                 }               
                 free(new);
-                option = 0;
                 break;
             }
             case 2:{                        // Si la opción del cliente es Ver Registro.
                 long idRegister;
-                recv(Client->clientfd,&idRegister,sizeof(idRegister),0);
-                bool existFile = ExisteRegistro(idRegister);
-                send(Client->clientfd,&existFile,sizeof(existFile),0);
-                if(existFile){
+                recv(Client->clientfd,&idRegister,sizeof(idRegister),0);        // Recibe el id del registro que va a buscar.
+                bool existFile = ExisteRegistro(idRegister);                    // Analiza si exíste la historia clínica de dicha id.
+                send(Client->clientfd,&existFile,sizeof(existFile),0);          // Envía al cliente si existe o no dicho archivo.
+                if(existFile){                                                  // Si exíste....
                     bool answer;
-                    
-                    recv(Client->clientfd,&answer,sizeof(bool),0);
-                    if(answer){
+                    recv(Client->clientfd,&answer,sizeof(bool),0);              // Recibe la respuesta de si el cliente quiere abrir el archivo.
+                    if(answer){                                                 // Si la respuesta es afirmativa...
                         FILE *file;
                         char* data;
-                        file = fopen(FilePath(idRegister),"r");
+                        file = fopen(FilePath(idRegister),"r");                 // Abre el archivo.
                         fseek(file,0L,SEEK_END);
                         long size = ftell(file);
-                        send(Client->clientfd,&size,sizeof(size),0);
+                        send(Client->clientfd,&size,sizeof(size),0);            // Envía el tamaño del archivo a recibir.
                         data = malloc(size);
                         bzero(data,size);
                         fread(data,size,1,file);
-                        send(Client->clientfd,data,size,0);
+                        send(Client->clientfd,data,size,0);                     // Envía la historia clinica.
                         fclose(file);
                         free(data); 
-                        recv(Client->clientfd,&size,sizeof(size),0);
+                        recv(Client->clientfd,&size,sizeof(size),0);            // Luego que el usuario edite la historia. Recibe el tamaño de la historia modificada.
                         data = malloc(size);
                         bzero(data,size);
-                        recv(Client->clientfd,data,size,0);
-                        file = fopen(FilePath(idRegister),"w+");
-                        fwrite(data,size,1,file);
+                        recv(Client->clientfd,data,size,0);                     // Recibe la historia nueva.
+                        file = fopen(FilePath(idRegister),"w+");        
+                        fwrite(data,size,1,file);                               // La escribe en el archivo.
                         fclose(file);
                         free(data);
                         char* id = malloc(10);
                         sprintf(id,"%li",idRegister);
-                        WriteLog(2,inet_ntoa(Client->Ip),id);
+                        WriteLog(2,inet_ntoa(Client->Ip),id);                   // Registra la busqueda en los Logs.
+                        printf("Eliminación de %s por el cliente %s correctamente...\n",id,inet_ntoa(Client->Ip));
                         free(id);
                     }
                 }
-                option = 0;
                 break;
             }
-            case 3:{                        // Si la opción del cliente es Borrar Registro.
+            case 3:{                                                                                // Si la opción del cliente es Borrar Registro.
                 long NumRegisters = 0/*ContarTabla()*/;
                 long id;
                 bool flag;
-                send(Client->clientfd,&NumRegisters,sizeof(NumRegisters),0);
-                recv(Client->clientfd,&flag,sizeof(flag),0);
-                if(flag){                                       // Si el usuario permite continuar con la operación.
+                send(Client->clientfd,&NumRegisters,sizeof(NumRegisters),0);                        // Envía al cliente la cantidad de registros en la tabla Hash.
+                recv(Client->clientfd,&flag,sizeof(flag),0);                                        // Recibe la confirmacion del cliente si continuar con la operación.    
+                if(flag){                                                                           // Si el usuario permite continuar con la operación.
                     long idTemp;
                     FILE *file, *temp;
                     struct dogType* registro = malloc(sizeof(struct dogType));
                     bzero(registro,sizeof(struct dogType));
-                    recv(Client->clientfd,id,sizeof(id),0);
+                    recv(Client->clientfd,&id,sizeof(id),0);
 
-                    //EliminarTabla(id);
+                    //EliminarTabla(id);                                                            // Elimina el registro de la tabla hash.
 
                     file = fopen("dataDogs.dat","r");                                               // Se abre un archivo que contiene las estructuras..
                     temp = fopen("temp.dat","w+");                                                  // Se crea un archivo temporal donde se guardaran las estructuras que nos serán eliminadas.
@@ -114,43 +105,36 @@ void* ListenRequest(void* args){
                         if(fread(&idTemp,sizeof(long),1,file) == 0){
                             break;
                         }
-                        fread(registro,sizeof(struct dogType),1,file);                          // ..... Lea los datos .....
+                        fread(registro,sizeof(struct dogType),1,file);                              // ..... Lea los datos .....
                         if(idTemp == id){
                             continue;                                                               // ... y exceptuando el que se va a eliminnar...
                         }
-                        fwrite(&idTemp,sizeof(long),1,temp);                                    // ... Escribirlos todos en el archivo temporal
-                        fwrite(registro,sizeof(struct dogType),1,temp);
+                        fwrite(&idTemp,sizeof(long),1,temp);                                        // ... Escribirlos todos en el archivo temporal
+                        fwrite(registro,sizeof(struct dogType),1,temp);                             
                     }while(feof(file) == 0);
                     fclose(file);
                     fclose(temp);
                     remove("dataDogs.dat");                                                         // Se elimina el archivo viejo y ....
                     rename("temp.dat","dataDogs.dat");
-
-                    remove(FilePath(id));
+                    remove(FilePath(id));                                                           // Elimina la historia clínica de la mascota eliminada.
                     char* idChar = malloc(10);
                     sprintf(idChar,"%li",id);
-                    WriteLog(3,inet_ntoa(Client->Ip),idChar);
+                    WriteLog(3,inet_ntoa(Client->Ip),idChar);                                       // Escribe el registro de la acción.
+                    printf("Eliminación de %s por el cliente %s correctamente...\n",idChar,inet_ntoa(Client->Ip));
                     free(registro);
                     free(idChar);
                 }
-                option = 0;
                 break;
             }
             case 4:{                        // Si la opción del cliente es Buscar Registro.
-                long id, end = 0;
-                recv(Client->clientfd,&id,sizeof(id),0);
-
-
-                //    send(Client->clientfd,); ¿Cómo enviar los id?
-
-                send(Client->clientfd,&end,sizeof(end),0);
-
-                char* idChar = malloc(10);
-                sprintf(idChar,"%li",id);
-                WriteLog(4,inet_ntoa(Client->Ip),idChar);
+                char* name = malloc(32);
+                int size;
+                recv(Client->clientfd,name,32,0);                                   // Recibe el nombre de la mascota a buscar.                
+                WriteLog(4,inet_ntoa(Client->Ip),name);                             // Escribe la acción en el Log.
                 break;
             }
         }
+        option = 0;
     }
 }
 
@@ -158,20 +142,21 @@ void* ListenRequest(void* args){
 void* ListenExit(void* client){
     char exitKey;
     while(true){
-        scanf("%s",&exitKey);
-        if(exitKey == 'S'){
-            exit(EXIT_SUCCESS);
+        scanf("%s",&exitKey);                                                       // Lee del teclado un caracter.
+        if(exitKey == 'S'){                                                         // Si el caracter es 'S'.
+            exit(EXIT_SUCCESS);                                                     // Sale del programa sin enviar error.
         }
     }
 }
 
+// Método principal. punto de partida inicial de la practica.
 int main(){
     int r;                                                                          // Se declaran variables.
     struct sockaddr_in server;                                  
     pthread_t ListenThread;
-    struct HashTable table = CreateTable();
+    Table = CreateTable();                                                          // Se crea la tabla hush.
 
-    printf("Bienvenido a la apliación cliente.\n\n");
+    printf("Bienvenido a la apliación cliente.\n\n");                               
     printf("Inicializando servidor...\n");
 
     len = sizeof(struct sockaddr);
@@ -196,7 +181,7 @@ int main(){
     }
 
     r = bind(serverfd, (struct sockaddr*) &server, len);
-    if(r == -1){                                                                    // Verificación de error.
+    if(r == -1){
         perror("La dirección IP no pudo ser asignada.\n");
         exit(EXIT_FAILURE);
     }
@@ -209,8 +194,6 @@ int main(){
     printf("El servidor fue inicializado correctamente, se están escuchando solicitudes de conexión entrantes.\n\n");    
 
     pthread_create(&ListenThread,NULL, ListenExit, NULL);  // Se crea un hilo que se encarga de esperar salida por parte del usuario.
-
-    Table = CreateTable();                                  // Inicializa la tabla Hash.
 
     CurrentUsers = 0;
     while(true){

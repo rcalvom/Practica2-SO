@@ -3,10 +3,11 @@
 #include <string.h>
 #include <strings.h>
 #include <time.h>
+#include <stdbool.h>
 #include "Functions.h"
 
 // Determina si dos cadenas de carcteres son iguales
-_Bool equals(char *String1, char *String2){
+bool equals(char *String1, char *String2){
     for(int i = 0; i<SIZE; i++){
         if(*(String1 + i) != *(String2 + i))
             return 0;
@@ -133,3 +134,21 @@ char* FilePath(long id){
     return filepath;
 }
 
+// Verifica si existe la historia con la id indicada.
+bool ExisteRegistro(long id){
+    char* filepath = FilePath(id);
+    FILE* file = fopen(filepath,"r");
+    if(file == NULL){
+        free(filepath);
+        if(file != NULL){
+            fclose(file);
+        }
+        return false;
+    }else{
+        free(filepath);
+        if(file != NULL){
+            fclose(file);
+        }
+        return true;
+    }
+}

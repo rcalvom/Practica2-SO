@@ -147,19 +147,18 @@ int main(){
                     printw("Enviando id al servidor...");
                     recv(clientfd,&answer,sizeof(answer),0);
                     if(answer){
-                        printw("El registro no ha podido ser borraro.\n");
+                        printw("El registro fue borrado satisfactoriamente.\n");
                     }else{
-                        printw("El registro no ha podido ser borraro.\n");
+                        printw("El registro no ha podido ser borrado.\n");
                     }
                 }else{
                     bool answer = false;
                     send(clientfd,&answer,sizeof(answer),0);
                 }
-
                 break;
             }    
             case 4:{
-                
+                // Cómo se van a recibir los datos?.
                 break;
             } 
             case 5:{

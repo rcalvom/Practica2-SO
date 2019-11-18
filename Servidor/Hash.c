@@ -1,9 +1,9 @@
-#include "Hash.h"
-#include "Funciones.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+#include "Hash.h"
+#include "Functions.h"
 
 #define TAMANOTABLA 2000
 
