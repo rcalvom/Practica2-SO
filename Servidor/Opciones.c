@@ -8,26 +8,25 @@
 #include "ShippingData.h"
 
 //Opción del menú Ingresar Registro.
-int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
+bool IngresarRegistro(struct HashTable* tabla, struct dogType *new){
     int r = 0; long id;
     FILE *dataDogs, *historia;
     char *values, *mensajeHistoria, *filepath, *filename;
-
     dataDogs = fopen("dataDogs.dat","a");
-    filepath = (char*) malloc(46);
-    filename = (char*) malloc(16);
-    mensajeHistoria = (char*) malloc(200);
-    values = (char*) malloc(10);
+    filepath = malloc(46);
+    filename = malloc(16);
+    mensajeHistoria = malloc(200);
+    values = malloc(10);
 
     if(dataDogs == NULL || filepath == NULL || filename == NULL || mensajeHistoria == NULL || values == NULL){
-        asm("DALL:");
         fclose(dataDogs);
         free(filepath);
         free(filename);
         free(mensajeHistoria);
         free(values);
-        return -1;
+        return false;
     }
+
     id = /*insertElement(tabla, new->name, 1)*/1;
     bzero(filename, 16);
     bzero(filepath, 46);
@@ -44,7 +43,12 @@ int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
     if(historia == NULL){
         fclose(historia);
         borrar(tabla, id);
-        asm("jmp DALL");
+        fclose(dataDogs);
+        free(filepath);
+        free(filename);
+        free(mensajeHistoria);
+        free(values);
+        return false;
     }
 
     do{
@@ -84,7 +88,7 @@ int IngresarRegistro(struct HashTable* tabla, struct dogType *new){
     free(filename);
     free(filepath);
     free(values);
-    return 0;
+    return true;
 }
 
 // Verifica si existe la historia con la id indicada.

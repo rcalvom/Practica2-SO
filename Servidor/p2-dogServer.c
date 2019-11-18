@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <string.h>
 #include <strings.h>
+#include <stdbool.h>
 #include "Functions.h"
 #include "Hash.h"
 #include "ShippingData.h"
@@ -20,7 +21,6 @@
 // Estructura que almacena los datos del cliente.
 struct Client{
     int clientfd;
-    int idSolicitud;
     pthread_t idThread;
     struct in_addr Ip;
 };
@@ -30,38 +30,52 @@ int serverfd;
 socklen_t len;
 int CurrentUsers;
 struct Client* clientsConnected[BACKLOG];
+struct HashTable Table;
 
 // Método para el hilo que se encarga de recibir datos de los clientes y ejecutar las solicitudes.
-void* ListenRequest(void* client){
-    struct Client *toListen = (struct Client*)client;
-    printf("Escuchando peticiones del cliente %s ...\n\n",inet_ntoa(toListen->Ip));
-   for(;;){                                                                     
-        while(toListen->idSolicitud != 0){                                              
-            sleep(1);
+void* ListenRequest(void* args){
+    struct Client *Client = (struct Client*) args;
+    printf("Escuchando peticiones del cliente %s ...\n\n",inet_ntoa(Client->Ip));
+    while(true){                                   
+        int option;                                  
+        recv(Client->clientfd, &option, sizeof(int), 0);                         // Recibe la opción del menú dada por el usuario.
+        switch (option){
+            case 1:{                        // Si la opción del cliente es Ingresar Registro.
+                struct dogType *new = malloc(sizeof(struct dogType));
+                bzero(new,sizeof(struct dogType));
+                recv(Client->clientfd,new,sizeof(struct dogType),0);
+                bool flag = IngresarRegistro(&Table,new);
+                send(Client->clientfd,&flag,sizeof(flag),0);
+                if(flag){
+                    WriteLog(1,inet_ntoa(Client->Ip),new->name);
+                }               
+                free(new);
+                option = 0;
+                break;
+            }
+            case 2:{                        // Si la opción del cliente es Ver Registro.
+                break;
+            }
+            case 3:{                        // Si la opción del cliente es Borrar Registro.
+                break;
+            }
+            case 4:{                        // Si la opción del cliente es Buscar Registro.
+                break;
+            }
         }
-        int rec = recv(toListen->clientfd, &toListen->idSolicitud, sizeof(int), 0); 
-        printf("id recibida: %i",toListen->idSolicitud);  
     }
 }
 
-// Método para hilo que se encarga de estar a la escucha de nuevas solicitudes entrantes.
-void* ListenConections(void* clients){
-    CurrentUsers = 0;
-    for(;;){
-        int clientfd = accept(serverfd, (struct sockaddr*) &clientfd, &len);        // Se acepta una solicitud de conexión entrante.
-        clientsConnected[CurrentUsers]->Ip.s_addr = clientfd;
-        if(clientfd == -1){
-            printf("La conexión entrante de la Ip %s no pudo ser aceptada.\n",inet_ntoa(clientsConnected[CurrentUsers]->Ip));
-        }else{
-            printf("El remoto %s se ha conectado correctamente.\n",inet_ntoa(clientsConnected[CurrentUsers]->Ip));      
-            clientsConnected[CurrentUsers]->clientfd = clientfd;
-            clientsConnected[CurrentUsers]->idSolicitud = 0;
-            pthread_create(&clientsConnected[CurrentUsers]->idThread,NULL,ListenRequest, clientsConnected[CurrentUsers]);  // Se crea un hilo que se encarga de recibir datos entrantes.
-            CurrentUsers++;
+//Método para hilo que se encarga de cerrar el proceso si el usuario lo solicita.
+void* ListenExit(void* client){
+    char exitKey;
+    while(true){
+        scanf("%s",&exitKey);
+        if(exitKey = 'S'){
+            exit(EXIT_SUCCESS);
         }
-    } 
+    }
 }
-
 
 int main(){
     int r;                                                                          // Se declaran variables.
@@ -77,6 +91,7 @@ int main(){
         clientsConnected[i] = (struct Client*) malloc(sizeof(struct Client)); 
         bzero(clientsConnected[i], sizeof(struct Client));
     }
+
     serverfd = socket(AF_INET, SOCK_STREAM, 0);                                     // Se configura y se crea el socket.
     if(serverfd == -1){                                                             // Verificación de error.
         perror("El socket no pudo ser creado.\n");
@@ -89,7 +104,7 @@ int main(){
 
     if(setsockopt(serverfd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) < 0){ // Libera el puerto para que pueda ser utilizado.
         perror("Error liberando dirección Ip.");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     r = bind(serverfd, (struct sockaddr*) &server, len);
@@ -103,136 +118,24 @@ int main(){
         exit(EXIT_FAILURE);
     }
 
-    printf("El servidor fue inicializado correctamente, se están escuchando solicitudes de conexión entrantes.\n\n");
+    printf("El servidor fue inicializado correctamente, se están escuchando solicitudes de conexión entrantes.\n\n");    
 
-    pthread_create(&ListenThread,NULL,ListenConections, clientsConnected);          // Se crea un hilo que se encarga de escuchar conexiónes entrantes.
+    pthread_create(&ListenThread,NULL, ListenExit, NULL);  // Se crea un hilo que se encarga de esperar salida por parte del usuario.
 
-    int i = 0;
-    for(;;){
-        int l = 0;
-        int solicitud = clientsConnected[i]->idSolicitud;
-        switch(solicitud){
-            case 1: {
-                _Bool answer = 1;
-                size_t dogSize = sizeof(struct dogType);
-                struct dogType *new = (struct dogType*) malloc(dogSize);
-                bzero(new, dogSize);
-                l = recv((clientsConnected[i])->clientfd, new, dogSize, 0);
-                if(l == -1){
-                    perror("No se ha recibido el dato correctamente.\n");
-                    free(new);
-                    clientsConnected[i]->idSolicitud = 0;
-                    break;
-                }
-                int a = IngresarRegistro(&table, new); 
-                if(a == -1){
-                    answer = 0;
-                }
-                l = send(clientsConnected[i]->clientfd,&answer,sizeof(_Bool),0);
-                if(l == -1){
-                    perror("No se ha recibido el dato correctamente.\n");
-                    free(new);
-                    clientsConnected[i]->idSolicitud = 0;
-                    break;
-                }
-                WriteLog(1,inet_ntoa(clientsConnected[i]->Ip),new->name);
-                free(new);
-                clientsConnected[i]->idSolicitud = 0;
-                break;
-            }
-            case 2: {
-                long id;
-                _Bool existsFile, answerClient;
-                l = recv(clientsConnected[i]->clientfd, &id, sizeof(id), 0);
-                existsFile = ExisteRegistro(id);
+    Table = CreateTable();                                  // Inicializa la tabla Hash.
 
-                if(existsFile == 1){                   //Si la historia existe.
-                
-                    l = send(clientsConnected[i]->clientfd,&existsFile,sizeof(_Bool),0);
-                    l = recv(clientsConnected[i]->clientfd,&answerClient,sizeof(_Bool),0);
-                    
-                    if(answerClient == 1){
-                        FILE *file;
-                        char* data, *path;
-                        path = FilePath(id);
-                        file = fopen(path,"r");
-                        fseek(file,0L,SEEK_END);
-                        long size = ftell(file);
-                        l = send(clientsConnected[i]->clientfd,&size,sizeof(size),0);
-                        data = malloc(size);
-                        bzero(data,size);
-                        fread(data,size,1,file);
-                        l = send(clientsConnected[i]->clientfd,data,size,0);
-                        l = recv(clientsConnected[i]->clientfd,&size,sizeof(size),0);
-                        l = recv(clientsConnected[i]->clientfd,data,size,0);
-                        fclose(file);
-                        fopen(path,"w+");
-                        fwrite(data,size,1,file);
-                        fclose(file);
-                        free(data);
-                        free(path);
-                    }
-                }else{          //Si no existe...
-                    l = send(clientsConnected[i]->clientfd,&existsFile,sizeof(_Bool),0);
-                }
-
-                char* idString = malloc (10);
-                sprintf(idString,"%li",id);
-                WriteLog(2,inet_ntoa(clientsConnected[i]->Ip),idString);
-                clientsConnected[i]->idSolicitud = 0;
-                free(idString);
-                break;
-            }
-            case 3: {
-                long id;
-                //Enviar la cantidad de registros.
-
-                l = recv(clientsConnected[i]->clientfd, &id, sizeof(id), 0);
-                if(l == -1){
-                    perror("No se ha recibido el dato correctamente.\n");
-                    clientsConnected[i]->idSolicitud = 0;
-                    break;
-                }
-                
-                BorrarRegistro(&table, id);
-                char* idString = malloc (10);
-                sprintf(idString,"%li",id);
-                WriteLog(3,inet_ntoa(clientsConnected[i]->Ip),idString);
-                clientsConnected[i]->idSolicitud = 0;
-                free(idString);
-                break;
-            }
-            case 4: {
-                char *nombre = (char*)malloc(32);
-                bzero(nombre, 32);
-                l = recv(clientsConnected[i]->clientfd, nombre, 32, 0);
-                if(l == -1){
-                    perror("No se ha recibido el dato correctamente.\n");
-                    free(nombre);
-                    break;
-                }
-                BuscarRegistro(&table, nombre);
-                // Enviar registros.
-                WriteLog(4,inet_ntoa(clientsConnected[i]->Ip),nombre);
-                free(nombre);
-                clientsConnected[i]->idSolicitud = 0;
-                break;
-            }
-            case 5: {
-                //TODO: Semaforo
-                for(int j = i; i < CurrentUsers-1; j++){
-                    clientsConnected[j] = clientsConnected[j+1];
-                }
-                CurrentUsers--;
-                clientsConnected[i]->idSolicitud = 0;
-                break;
-            }
+    CurrentUsers = 0;
+    while(true){
+        int clientfd = accept(serverfd, (struct sockaddr*) &clientfd, &len);        // Se acepta una solicitud de conexión entrante.
+        clientsConnected[CurrentUsers]->Ip.s_addr = clientfd;
+        clientsConnected[CurrentUsers]->clientfd = clientfd;
+        if(clientfd == -1){
+            printf("La conexión entrante de la Ip %s no pudo ser aceptada.\n",inet_ntoa(clientsConnected[CurrentUsers]->Ip));
+        }else{
+            printf("El remoto %s se ha conectado correctamente.\n",inet_ntoa(clientsConnected[CurrentUsers]->Ip));      
+            pthread_create(&clientsConnected[CurrentUsers]->idThread,NULL, ListenRequest, clientsConnected[CurrentUsers]);  // Se crea un hilo que se encarga de recibir datos entrantes.
+            CurrentUsers++;
         }
-        (clientsConnected[i])->idSolicitud = 0;
-        if(CurrentUsers != 0){
-            i = (i+1)%CurrentUsers;
-        }
-    }
-    
+    } 
     return 0;
 }

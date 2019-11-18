@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 //Funciones correspondientes a las opciones indicadas.
-int IngresarRegistro(struct HashTable* tabla, struct dogType *new);
+bool IngresarRegistro(struct HashTable* tabla, struct dogType *new);
 int ExisteRegistro(long id);
 _Bool VerRegistro2(long id);
 int BorrarRegistro(struct HashTable* tabla, long id);
