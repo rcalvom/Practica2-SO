@@ -48,12 +48,49 @@ void* ListenRequest(void* args){
                 send(Client->clientfd,&flag,sizeof(flag),0);
                 if(flag){
                     WriteLog(1,inet_ntoa(Client->Ip),new->name);
+                    printf("Inserción de %s por el cliente %s correctamente...\n",new->name,inet_ntoa(Client->Ip));
                 }               
                 free(new);
                 option = 0;
                 break;
             }
             case 2:{                        // Si la opción del cliente es Ver Registro.
+                long idRegister;
+                recv(Client->clientfd,&idRegister,sizeof(idRegister),0);
+                bool existFile = ExisteRegistro(idRegister);
+                send(Client->clientfd,&existFile,sizeof(existFile),0);
+                if(existFile){
+                    bool answer;
+                    
+                    recv(Client->clientfd,&answer,sizeof(bool),0);
+                    if(answer){
+                        FILE *file;
+                        char* data;
+                        file = fopen(FilePath(idRegister),"r");
+                        fseek(file,0L,SEEK_END);
+                        long size = ftell(file);
+                        send(Client->clientfd,&size,sizeof(size),0);
+                        data = malloc(size);
+                        bzero(data,size);
+                        fread(data,size,1,file);
+                        fclose(file);
+                        send(Client->clientfd,data,size,0);
+                        free(data); 
+                        recv(Client->clientfd,&size,sizeof(size),0);
+                        data = malloc(size);
+                        bzero(data,size);
+                        recv(Client->clientfd,data,size,0);
+                        file = fopen(FilePath(idRegister),"w+");
+                        fwrite(data,size,1,file);
+                        fclose(file);
+                        free(data);
+                        char* id = malloc(10);
+                        sprintf(id,"%li",idRegister);
+                        WriteLog(2,inet_ntoa(Client->Ip),id);
+                        free(id);
+                    }
+                }
+                option = 0;
                 break;
             }
             case 3:{                        // Si la opción del cliente es Borrar Registro.

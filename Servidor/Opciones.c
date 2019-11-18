@@ -92,22 +92,21 @@ bool IngresarRegistro(struct HashTable* tabla, struct dogType *new){
 }
 
 // Verifica si existe la historia con la id indicada.
-_Bool ExisteRegistro(long id){
+bool ExisteRegistro(long id){
     char* filepath = FilePath(id);
-    printf("Ruta: %s",filepath);
-    FILE* file = fopen(filepath,"r");                                       // Se comprueba si el archivo existe.
+    FILE* file = fopen(filepath,"r");
     if(file == NULL){
         free(filepath);
         if(file != NULL){
             fclose(file);
         }
-        return 0;
+        return false;
     }else{
         free(filepath);
         if(file != NULL){
             fclose(file);
         }
-        return 1;
+        return true;
     }
 }
 
