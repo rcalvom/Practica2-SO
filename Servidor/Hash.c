@@ -1,9 +1,9 @@
+#include "Hash.h"
+#include "Functions.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
-#include "Hash.h"
-#include "Functions.h"
 
 #define TAMANOTABLA 2000
 
@@ -55,6 +55,7 @@ void CreateList(int index, struct HashTable *table){
     struct LinkedList newList, ToDelete;                                            //Crea las estructuras para la lista nueva y para la que va a guardar en disco
     newList.FirstNode = NULL;
     newList.LastNode = NULL;
+    newList.Size = 0;
     indexString = IntToString(index);                                               //Convierte el index de la lista en cadena de caracteres
     *fileName = '\0';
     strcat(fileName, "HashNodes/Node");                                             //Concatena cadenas para formar el nombre del archivo
@@ -90,6 +91,7 @@ void CreateList(int index, struct HashTable *table){
                     newList.LastNode->next = nodo;
                     newList.LastNode = nodo;
                 }
+                newList.Size++;
             } else{
                 free(nodo);
             }
@@ -139,8 +141,8 @@ struct LinkedList buscarId(struct HashTable *table, char *nombre){
     struct LinkedList Get;
     Get.FirstNode = NULL;
     Get.LastNode = NULL;
+    Get.Size = 0;
     struct Node *FN = table->list[0].FirstNode;
-    int ElementsFound = 0;
     while(FN != NULL){
         if(equals(FN->name, nombre)){
             struct Node *newNode = (struct Node *)malloc(sizeof(struct Node));
@@ -155,11 +157,10 @@ struct LinkedList buscarId(struct HashTable *table, char *nombre){
                 Get.LastNode->next = newNode;
                 Get.LastNode = newNode;
             }
-            ElementsFound++;
+            Get.Size++;
         }
         FN = FN->next;
     }
-    printf("Se encontraron %i elementos\n", ElementsFound);
     return Get;
 }
 
@@ -183,6 +184,7 @@ long borrar(struct HashTable *table, long id){
             if(res == table->list[0].LastNode)
                 table->list[0].LastNode = FN;
             free(res);
+            table->list[0].Size--;
             return id;
         }
     }
@@ -241,6 +243,7 @@ long insertElement(struct HashTable *table, char *nombre, short AddLast){
             table->list[0].LastNode->next = nodo;
             table->list[0].LastNode = nodo;
         }
+        table->list[0].Size++;
     }
 
     nodo->id = id;
@@ -254,6 +257,7 @@ struct HashTable CreateTable(){
         table.list[i].FirstNode = NULL;
         table.list[i].LastNode = NULL;
         table.lastIndex[i] = -1;
+        table.list[i].Size = 0;
     }
     return table;
 }
@@ -262,4 +266,25 @@ void SaveTable(struct HashTable *table){
     for(int i = 0; i<NUMOFLISTS; i++){
         SaveList(table->list[i], table->lastIndex[i]);
     }
+}
+
+char* ListToString(struct LinkedList *list){
+    char *ToString = (char *)malloc(1);
+    if(ToString == NULL) {
+        return NULL;
+    }
+    *ToString = '\0';
+    struct Node *FN = list->FirstNode;
+    while(FN != NULL) {
+        char *IdNode = IntToString(FN->id);
+        strcat(ToString, "Id: ");
+        strcat(ToString, IdNode);
+        strcat(ToString, ", Nombre: ");
+        strcat(ToString, &FN->name[0]);
+        strcat(ToString, "\n");
+
+        free(IdNode);
+        FN = FN->next;
+    }
+    return ToString;
 }

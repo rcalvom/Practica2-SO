@@ -13,6 +13,7 @@ struct Node{
 struct LinkedList{
     struct Node* FirstNode;
     struct Node* LastNode;
+    int Size;
 };
 
 struct HashTable{
@@ -29,5 +30,6 @@ long borrar(struct HashTable *table, long id);                              //El
 long insertElement(struct HashTable *table, char *nombre, short AddLast);   //Obtiene el index de un elemento y llamar a la funcion insertar
 struct HashTable CreateTable();                                             //Crea una tabla vacía
 void SaveTable(struct HashTable *table);                                    //Guarda la tabla en disco
+char* ListToString(struct LinkedList *list);                                 //Convierte a list en una cadena de caracteres y devuelve un apuntador donde está el string
 
 #endif
