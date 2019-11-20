@@ -1,1 +1,0 @@
-gcc Funciones.c Functions.c Hash.c Opciones.c p2-dogServer.c -lncurses -o p2-dogServer -lpthread
