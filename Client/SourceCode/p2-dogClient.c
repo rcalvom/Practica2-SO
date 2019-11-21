@@ -158,7 +158,14 @@ int main(){
                 break;
             }    
             case 4:{
-                // Cómo se van a recibir los datos?.
+                send(clientfd,&MenuOption,sizeof(MenuOption),0);
+                long id = BuscarRegistro();
+                long size;
+                recv(clientfd,&size,sizeof(size),0);
+                char* search = malloc(size);
+                recv(clientfd,search,size,0);
+                printw("%s",search);
+                free(search);
                 break;
             } 
             case 5:{

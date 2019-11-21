@@ -10,6 +10,8 @@
 #include <string.h>
 #include <strings.h>
 #include <stdbool.h>
+#include <semaphore.h>
+#include <fcntl.h>
 #include "Functions.h"
 #include "Hash.h"
 #include "ShippingData.h"
@@ -24,6 +26,7 @@ socklen_t len;
 int CurrentUsers;
 struct Client* clientsConnected[BACKLOG];
 struct HashTable Table;
+sem_t * semaphore;
 
 // Método para el hilo que se encarga de recibir datos de los clientes y ejecutar las solicitudes.
 void* ListenRequest(void* args){
@@ -34,6 +37,7 @@ void* ListenRequest(void* args){
         recv(Client->clientfd, &option, sizeof(int), 0);                         // Recibe la opción del menú dada por el usuario.
         switch (option){
             case 1:{                        // Si la opción del cliente es Ingresar Registro.
+                sem_wait(semaphore);
                 struct dogType *new = malloc(sizeof(struct dogType));
                 bzero(new,sizeof(struct dogType));
                 recv(Client->clientfd,new,sizeof(struct dogType),0);            // Recibe la estructura del cliente.
@@ -44,9 +48,11 @@ void* ListenRequest(void* args){
                     printf("Inserción de %s por el cliente %s correctamente...\n",new->name,inet_ntoa(Client->Ip));
                 }               
                 free(new);
+                sem_post(semaphore);
                 break;
             }
             case 2:{                        // Si la opción del cliente es Ver Registro.
+                sem_wait(semaphore);
                 long idRegister;
                 recv(Client->clientfd,&idRegister,sizeof(idRegister),0);        // Recibe el id del registro que va a buscar.
                 bool existFile = ExisteRegistro(idRegister);                    // Analiza si exíste la historia clínica de dicha id.
@@ -82,9 +88,11 @@ void* ListenRequest(void* args){
                         free(id);
                     }
                 }
+                sem_post(semaphore);
                 break;
             }
             case 3:{                                                                                // Si la opción del cliente es Borrar Registro.
+                sem_wait(semaphore);
                 long NumRegisters = 0/*ContarTabla()*/;
                 long id;
                 bool flag;
@@ -130,13 +138,21 @@ void* ListenRequest(void* args){
                         send(Client->clientfd,&answer,sizeof(answer),0);
                     }                                                                               
                 }
+                sem_post(semaphore);
                 break;
             }
             case 4:{                        // Si la opción del cliente es Buscar Registro.
+                sem_wait(semaphore);
                 char* name = malloc(32);
                 int size;
-                recv(Client->clientfd,name,32,0);                                   // Recibe el nombre de la mascota a buscar.                
+                recv(Client->clientfd,name,32,0);                                   // Recibe el nombre de la mascota a buscar.
+
+                //size = tamaño de la cadena a enviar;
+                //char* search = malloc(size);
+                //send(Client->clientfd,search,size,0);
+
                 WriteLog(4,inet_ntoa(Client->Ip),name);                             // Escribe la acción en el Log.
+                sem_post(semaphore);
                 break;
             }
         }
@@ -200,6 +216,8 @@ int main(){
     printf("El servidor fue inicializado correctamente, se están escuchando solicitudes de conexión entrantes.\n\n");    
 
     pthread_create(&ListenThread,NULL, ListenExit, NULL);  // Se crea un hilo que se encarga de esperar salida por parte del usuario.
+
+    semaphore = sem_open("Semaphore",O_CREAT,0700,1);      // Inicializa el semáforo que ayudará a evitar conciciones de carrera en los archivos de datos.
 
     CurrentUsers = 0;
     while(true){
