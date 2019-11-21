@@ -144,7 +144,7 @@ int main(){
                     bool answer = true;
                     send(clientfd,&answer,sizeof(bool),0);
                     send(clientfd,&id,sizeof(id),0);
-                    printw("Enviando id al servidor...");
+                    printw("Enviando id al servidor...\n");
                     recv(clientfd,&answer,sizeof(answer),0);
                     if(answer){
                         printw("El registro fue borrado satisfactoriamente.\n");
@@ -153,7 +153,7 @@ int main(){
                     }
                 }else{
                     bool answer = false;
-                    send(clientfd,&answer,sizeof(answer),0);
+                    send(clientfd,&answer,sizeof(bool),0);
                 }
                 break;
             }    

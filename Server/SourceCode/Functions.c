@@ -10,11 +10,11 @@
 bool equals(char *String1, char *String2){
     for(int i = 0; i<SIZE; i++){
         if(*(String1 + i) != *(String2 + i))
-            return 0;
+            return false;
         if((int)(*(String1+i)) == 0)
             break;
     }
-    return 1;
+    return true;
 }
 
 // Convierte un entero a una cadena de caracteres.

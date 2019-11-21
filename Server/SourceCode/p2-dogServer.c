@@ -59,7 +59,7 @@ void* ListenRequest(void* args){
                         char* data;
                         file = fopen(FilePath(idRegister),"r");                 // Abre el archivo.
                         fseek(file,0L,SEEK_END);
-                        long size = ftell(file);
+                        long size = ftell(file)+1;
                         send(Client->clientfd,&size,sizeof(size),0);            // Envía el tamaño del archivo a recibir.
                         data = malloc(size);
                         bzero(data,size);
@@ -78,7 +78,7 @@ void* ListenRequest(void* args){
                         char* id = malloc(10);
                         sprintf(id,"%li",idRegister);
                         WriteLog(2,inet_ntoa(Client->Ip),id);                   // Registra la busqueda en los Logs.
-                        printf("Eliminación de %s por el cliente %s correctamente...\n",id,inet_ntoa(Client->Ip));
+                        printf("Edición de la historia de %s por el cliente %s correctamente...\n",id,inet_ntoa(Client->Ip));
                         free(id);
                     }
                 }
@@ -97,32 +97,38 @@ void* ListenRequest(void* args){
                     bzero(registro,sizeof(struct dogType));
                     recv(Client->clientfd,&id,sizeof(id),0);
 
-                    //EliminarTabla(id);                                                            // Elimina el registro de la tabla hash.
-
-                    file = fopen("dataDogs.dat","r");                                               // Se abre un archivo que contiene las estructuras..
-                    temp = fopen("temp.dat","w+");                                                  // Se crea un archivo temporal donde se guardaran las estructuras que nos serán eliminadas.
-                    do{                                                                             // Mientras el archivo aún tenga estructuras....
-                        if(fread(&idTemp,sizeof(long),1,file) == 0){
-                            break;
-                        }
-                        fread(registro,sizeof(struct dogType),1,file);                              // ..... Lea los datos .....
-                        if(idTemp == id){
-                            continue;                                                               // ... y exceptuando el que se va a eliminnar...
-                        }
-                        fwrite(&idTemp,sizeof(long),1,temp);                                        // ... Escribirlos todos en el archivo temporal
-                        fwrite(registro,sizeof(struct dogType),1,temp);                             
-                    }while(feof(file) == 0);
-                    fclose(file);
-                    fclose(temp);
-                    remove("dataDogs.dat");                                                         // Se elimina el archivo viejo y ....
-                    rename("temp.dat","dataDogs.dat");
-                    remove(FilePath(id));                                                           // Elimina la historia clínica de la mascota eliminada.
-                    char* idChar = malloc(10);
-                    sprintf(idChar,"%li",id);
-                    WriteLog(3,inet_ntoa(Client->Ip),idChar);                                       // Escribe el registro de la acción.
-                    printf("Eliminación de %s por el cliente %s correctamente...\n",idChar,inet_ntoa(Client->Ip));
-                    free(registro);
-                    free(idChar);
+                    long exist = borrar(&Table,id);  
+                    if(exist != -1){                                                                // Si el registro existe en la tabla hash y se puede borrar...
+                        bool answer = true;
+                        send(Client->clientfd,&answer,sizeof(answer),0);
+                        file = fopen("dataDogs.dat","r");                                           // Se abre un archivo que contiene las estructuras..
+                        temp = fopen("temp.dat","w+");                                              // Se crea un archivo temporal donde se guardaran las estructuras que nos serán eliminadas.
+                        do{                                                                         // Mientras el archivo aún tenga estructuras....
+                            if(fread(&idTemp,sizeof(long),1,file) == 0){
+                                break;
+                            }
+                            fread(registro,sizeof(struct dogType),1,file);                          // ..... Lea los datos .....
+                            if(idTemp == id){
+                                continue;                                                           // ... y exceptuando el que se va a eliminnar...
+                            }
+                            fwrite(&idTemp,sizeof(long),1,temp);                                    // ... Escribirlos todos en el archivo temporal
+                            fwrite(registro,sizeof(struct dogType),1,temp);                             
+                        }while(feof(file) == 0);
+                        fclose(file);
+                        fclose(temp);
+                        remove("dataDogs.dat");                                                     // Se elimina el archivo viejo y ....
+                        rename("temp.dat","dataDogs.dat");
+                        remove(FilePath(id));                                                       // Elimina la historia clínica de la mascota eliminada.
+                        char* idChar = malloc(10);
+                        sprintf(idChar,"%li",id);
+                        WriteLog(3,inet_ntoa(Client->Ip),idChar);                                   // Escribe el registro de la acción.
+                        printf("Eliminación de %s por el cliente %s correctamente...\n",idChar,inet_ntoa(Client->Ip));
+                        free(registro);
+                        free(idChar);
+                    }else{
+                        bool answer = false;
+                        send(Client->clientfd,&answer,sizeof(answer),0);
+                    }                                                                               
                 }
                 break;
             }
@@ -142,8 +148,8 @@ void* ListenRequest(void* args){
 void* ListenExit(void* client){
     char exitKey;
     while(true){
-        scanf("%s",&exitKey);                                                       // Lee del teclado un caracter.
-        if(exitKey == 'S'){                                                         // Si el caracter es 'S'.
+        scanf("%c",&exitKey);                                                       // Lee del teclado un caracter.
+        if(exitKey == 'q' || exitKey == 'Q'){                                       // Si el caracter es 'Q' o 'q'.
             exit(EXIT_SUCCESS);                                                     // Sale del programa sin enviar error.
         }
     }

@@ -36,7 +36,7 @@ long VerRegistro(){
 
 long BorrarRegistro(){
     long id;
-    printw("Por favor ingrese el id del registro que desea eliminar: (Ingrese -1 para cancelar la operación)");
+    printw("Por favor ingrese el id del registro que desea eliminar.\nIngrese -1 para cancelar la operación.");
     scanw("%li", &id);
     printw("\n");
     return id;

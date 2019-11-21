@@ -164,8 +164,8 @@ struct LinkedList buscarId(struct HashTable *table, char *nombre){
     return Get;
 }
 
-//borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demas 
-//elementos que esten en la misma posicion de la tabla
+// Borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demás 
+// elementos que esten en la misma posicion de la tabla.
 long borrar(struct HashTable *table, long id){
     OrganizeList(id%TAMANOTABLA, table);
 
@@ -192,12 +192,12 @@ long borrar(struct HashTable *table, long id){
 }
 
 /*
-Inserta un elemento en la tabla hash
-Parametros:
-table es la tabla hash donde se va a insertar en elemento
-nombre es el nombre del nuevo registro
+    Inserta un elemento en la tabla hash.
+    Parametros:
+    table es la tabla hash donde se va a insertar en elemento
+    nombre es el nombre del nuevo registro.
 
-Devuelve la id con que fue registrado
+    Devuelve la id con que fue registrado.
 */
 long insertElement(struct HashTable *table, char *nombre, short AddLast){
     int index;
