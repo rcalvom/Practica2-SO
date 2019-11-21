@@ -65,16 +65,17 @@ void* ListenRequest(void* args){
                         char* data;
                         file = fopen(FilePath(idRegister),"r");                 // Abre el archivo.
                         fseek(file,0L,SEEK_END);
-                        long size = ftell(file)+1;
+                        long size = ftell(file);
+                        rewind(file);
                         send(Client->clientfd,&size,sizeof(size),0);            // Envía el tamaño del archivo a recibir.
-                        data = malloc(size);
+                        data = malloc(size+1);
                         bzero(data,size);
                         fread(data,size,1,file);
                         send(Client->clientfd,data,size,0);                     // Envía la historia clinica.
                         fclose(file);
                         free(data); 
                         recv(Client->clientfd,&size,sizeof(size),0);            // Luego que el usuario edite la historia. Recibe el tamaño de la historia modificada.
-                        data = malloc(size);
+                        data = malloc(size+1);
                         bzero(data,size);
                         recv(Client->clientfd,data,size,0);                     // Recibe la historia nueva.
                         file = fopen(FilePath(idRegister),"w+");        

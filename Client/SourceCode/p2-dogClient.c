@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <strings.h>
+#include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include "Functions.h"
@@ -105,7 +106,7 @@ int main(){
                         long size;
                         recv(clientfd, &size, sizeof(size), 0);
                         file = fopen("Registro.dat","w+");
-                        data = malloc(size);
+                        data = malloc(size+1);
                         bzero(data,size);
                         recv(clientfd,data,size,0);
                         fwrite(data,size,1,file);
@@ -116,16 +117,18 @@ int main(){
                         file = fopen("Registro.dat","r");
                         fseek(file,0L,SEEK_END);
                         size = ftell(file);
+                        rewind(file);
                         send(clientfd,&size,sizeof(size),0);
-                        data = malloc(size);
+                        data = malloc(size+1);
                         bzero(data,size);
                         fread(data,size,1,file);
                         send(clientfd,data,size,0);
                         free(data);
                         fclose(file);
+                        remove("Registro.dat");
                     }                   
                 }else{
-                    printw("El registro con la id dada no existe en el sistema.\n");
+                    printw("El registro con la Id dada no existe en el sistema.\n");
                 }
 
                 break;
@@ -159,7 +162,8 @@ int main(){
             }    
             case 4:{
                 send(clientfd,&MenuOption,sizeof(MenuOption),0);
-                long id = BuscarRegistro();
+                char* name = BuscarRegistro();
+                send(clientfd,name,strlen(name),0);
                 long size;
                 recv(clientfd,&size,sizeof(size),0);
                 char* search = malloc(size);
