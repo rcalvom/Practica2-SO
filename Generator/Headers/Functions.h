@@ -1,5 +1,6 @@
 #ifndef FUNCIONESH
 #define FUNCIONESH
+#include <stdio.h> 
 
 #define SIZE 32
 

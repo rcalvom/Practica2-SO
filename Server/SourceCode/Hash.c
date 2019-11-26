@@ -17,9 +17,17 @@ int hash(char *name){
     return index%TAMANOTABLA;
 }
 
-void SaveList(struct LinkedList list, int index){
+void BorrarNodos(struct Node *node){
+    if(node->next != NULL){
+        BorrarNodos(node->next);
+    }
+    node->next = NULL;
+    free((void *)node);
+}
+
+void SaveList(struct LinkedList *list, int index){
     if(index >= 0){                                                          //Verifica el index de la lista que se va a guardar para saber si existía (>= 0)
-        char *fileName = (char *) malloc(1);
+        char *fileName = malloc(1);
         char *indexString = IntToString(index);
         *fileName = '\0';
         strcat(fileName, "HashNodes/Node");
@@ -29,7 +37,7 @@ void SaveList(struct LinkedList list, int index){
         free(fileName);
         free(indexString);
 
-        struct Node *FN = list.FirstNode;
+        struct Node *FN = list->FirstNode;
         while(FN != NULL) {
             int r = 0;
             do{
@@ -42,17 +50,17 @@ void SaveList(struct LinkedList list, int index){
         }
         fclose(file); 
     }
-    struct Node *FN = list.FirstNode;
-    while(FN != NULL) {
-        struct Node *res = FN;
-        FN = FN->next;
-        free(res);
+    if(list->FirstNode != NULL){
+        BorrarNodos(list->FirstNode);
     }
+    list->FirstNode = NULL;
+    list->LastNode = NULL;
+    list->Size = 0;
 }
 
 void CreateList(int index, struct HashTable *table){
-    char *fileName = (char *) malloc(1), *indexString;                              //Pide memoria para el nombre del archivo donde está la lista
-    struct LinkedList newList, ToDelete;                                            //Crea las estructuras para la lista nueva y para la que va a guardar en disco
+    char *fileName = malloc(1), *indexString;                              //Pide memoria para el nombre del archivo donde está la lista
+    struct LinkedList newList, *ToDelete;                                           //Crea las estructuras para la lista nueva y para la que va a guardar en disco
     newList.FirstNode = NULL;
     newList.LastNode = NULL;
     newList.Size = 0;
@@ -71,7 +79,7 @@ void CreateList(int index, struct HashTable *table){
         while(attempts < 5){
             struct Node *nodo;
             do{
-                nodo = (struct Node *) malloc(sizeof(struct Node));
+                nodo = malloc(sizeof(struct Node));
             }while(nodo == NULL);
             bzero(nodo, sizeof(struct Node));
             read = 0;
@@ -100,16 +108,15 @@ void CreateList(int index, struct HashTable *table){
     fclose(file);                                                                   //Cierra el archivo
     free(fileName);                                                                 //Libera la memoria del nombre
     free(indexString);                                                              //Libera la memoria del index
-    ToDelete = table->list[NUMOFLISTS-1];                                           //Carga la tabla que va a guardar
+    ToDelete = &table->list[NUMOFLISTS-1];                                          //Carga la tabla que va a guardar
     int indexToDlete = table->lastIndex[NUMOFLISTS-1];
+    SaveList(ToDelete, indexToDlete);
     for(int i = NUMOFLISTS-1; i>0; i--){
         table->list[i] = table->list[i-1];                                          //Desplaza las demás listas
         table->lastIndex[i] = table->lastIndex[i-1];                                //Desplaza los index de las listas que están en memoria
     }
     table->list[0] = newList;                                                       //Ponde la nueva lista en la hash
     table->lastIndex[0] = index;                                                    //Pone el index de la nueva lista
-
-    SaveList(ToDelete, indexToDlete);
 }
 
 void OrganizeList(int index, struct HashTable *table) {
@@ -130,7 +137,7 @@ void OrganizeList(int index, struct HashTable *table) {
 //busca e imprime todos los registros que coincidan con un nombre dado
 struct LinkedList buscarId(struct HashTable *table, char *nombre){
     int index;
-    char *respaldoNombre = (char *)malloc(SIZE);
+    char *respaldoNombre = malloc(SIZE);
     bzero(respaldoNombre, SIZE);
     CopyString(nombre, respaldoNombre);
     toUpperCase(respaldoNombre);
@@ -145,7 +152,7 @@ struct LinkedList buscarId(struct HashTable *table, char *nombre){
     struct Node *FN = table->list[0].FirstNode;
     while(FN != NULL){
         if(equals(FN->name, nombre)){
-            struct Node *newNode = (struct Node *)malloc(sizeof(struct Node));
+            struct Node *newNode = malloc(sizeof(struct Node));
             bzero(newNode, sizeof(struct Node));
             newNode->id = FN->id;
             CopyString(nombre, newNode->name);
@@ -164,46 +171,47 @@ struct LinkedList buscarId(struct HashTable *table, char *nombre){
     return Get;
 }
 
-// Borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demás 
-// elementos que esten en la misma posicion de la tabla.
+//borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demas 
+//elementos que esten en la misma posicion de la tabla
 long borrar(struct HashTable *table, long id){
     OrganizeList(id%TAMANOTABLA, table);
 
-    struct Node *FN = table->list[0].FirstNode;
-    if(FN != NULL){
-        if(FN->id == id){
-            table->list[0].FirstNode = FN->next;
-            free(FN);
-            return id;
-        }
-    }
+    struct Node *FN;
+    FN->next = table->list[0].FirstNode;
     while(FN->next != NULL){
         if(FN->next->id == id){
             struct Node *res = FN->next;
             FN->next = res->next;
-            if(res == table->list[0].LastNode)
+            if(table->list[0].LastNode == table->list[0].FirstNode){
+                table->list[0].LastNode = NULL;
+                table->list[0].FirstNode = NULL;
+            } else if(res == table->list[0].LastNode)
                 table->list[0].LastNode = FN;
-            free(res);
+            else if(res == table->list[0].FirstNode)
+                table->list[0].FirstNode = res->next;
+            res->next = NULL;
+            free((void *)res);
             table->list[0].Size--;
             return id;
         }
+        FN = FN->next;
     }
     return -1;
 }
 
 /*
-    Inserta un elemento en la tabla hash.
-    Parametros:
-    table es la tabla hash donde se va a insertar en elemento
-    nombre es el nombre del nuevo registro.
+Inserta un elemento en la tabla hash
+Parametros:
+table es la tabla hash donde se va a insertar en elemento
+nombre es el nombre del nuevo registro
 
-    Devuelve la id con que fue registrado.
+Devuelve la id con que fue registrado
 */
 long insertElement(struct HashTable *table, char *nombre, short AddLast){
     int index;
     long id;
-    struct Node *nodo = (struct Node*) malloc(sizeof(struct Node));
-    char *respaldoNombre = (char *)malloc(SIZE);
+    struct Node *nodo = malloc(sizeof(struct Node));
+    char *respaldoNombre = malloc(SIZE);
     bzero(nodo, sizeof(struct Node));
     bzero(respaldoNombre, SIZE);
     CopyString(nombre, nodo->name);
@@ -215,7 +223,7 @@ long insertElement(struct HashTable *table, char *nombre, short AddLast){
 
     if(nodo == NULL){
         return -1;
-    } else if(respaldoNombre == NULL || index < 0 || TAMANOTABLA < index){
+    } else if(index < 0 || TAMANOTABLA < index){
         free(nodo);
         return -1;
     }
@@ -235,10 +243,10 @@ long insertElement(struct HashTable *table, char *nombre, short AddLast){
                 asm("jmp AddLast");
             } else {
                 nodo->next = FN->next;
-                FN->next = nodo->next;
+                FN->next = nodo;
             }
         } else {
-            id = table->list[0].LastNode->id;
+            id = table->list[0].LastNode->id + TAMANOTABLA;
             asm("AddLast:");
             table->list[0].LastNode->next = nodo;
             table->list[0].LastNode = nodo;
@@ -264,12 +272,12 @@ struct HashTable CreateTable(){
 
 void SaveTable(struct HashTable *table){
     for(int i = 0; i<NUMOFLISTS; i++){
-        SaveList(table->list[i], table->lastIndex[i]);
+        SaveList(&table->list[i], table->lastIndex[i]);
     }
 }
 
 char* ListToString(struct LinkedList *list){
-    char *ToString = (char *)malloc(1);
+    char *ToString = malloc(1);
     if(ToString == NULL) {
         return NULL;
     }
@@ -287,4 +295,13 @@ char* ListToString(struct LinkedList *list){
         FN = FN->next;
     }
     return ToString;
+}
+
+int contarRegistros(struct HashTable *table){
+    int registros = 0;
+    for(int i = 0; i<TAMANOTABLA; i++){
+        CreateList(i, table);
+        registros += table->list[0].Size;
+    }
+    return registros;
 }

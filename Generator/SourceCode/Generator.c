@@ -13,31 +13,32 @@ int main(){
 
     long id;
     FILE *file, *names;
-    char* name;
+    char* AllNames = (char *)malloc(32*1700);
+    if(AllNames == NULL){
+        printf("C mamo\n");
+        return -1;
+    }
 
     srand(time(NULL));                                                              // Se elige una semilla aleatoria.
     struct HashTable table = CreateTable();                                         // Se Inicializa la tabla hash.
     char* Breeds[] = {"Labrador", "Pug", "Bulldog", "Chihuahua", "Golden",          
                       "Dalmata", "Pastor", "Labrador", "San Bernardo"};             // Se crea arreglo con razas.
     char Genders[] = {'M','H'};                                                     // Se crea arreglo con géneros.
-    file = fopen("dataDogs.dat","a");                                               // Se abre el archivo que contendrá las estructuras.
+    file = fopen("dataDogs.dat","w");                                               // Se abre el archivo que contendrá las estructuras.
     names = fopen("nombresMascotas.txt","r");                                       // Se abre el archivo que tiene los nombres.
+    leer(AllNames, names);
+    fclose(names);
+    struct dogType newRegister;
     
-    for(int i = 0; i<NUMESTRUCTURAS;i++){
-        printf("Generando registro %i.\n\n",i+1);
-        struct dogType newRegister;
+    for(int i = 0; i<NUMESTRUCTURAS; i++){
+        if(i%100000 == 0)
+            printf("Registros creados: %i\n", i);
         bzero(&newRegister, sizeof(struct dogType));                                // Crea una estructura con 0 en todos sus bits.
 
-        int rnames = rand() % 1700 + 1;                                             // Elije un número aleatorio entre 1 y 1000.
-        printf("aleatorio = %i",rnames);
-        rewind(names);                                                              // Coloca el apuntador del archivo al comienzo.
-        name = malloc(32);
-        bzero(name,32);
-        for(int i = 0; i<rnames; i++){                                              // Lee el nombre en la posición aleatoria
-            leer(name,names);  
-        }
+        int rnames = rand() % 1700;                                                 // Elije un número aleatorio entre 1 y 1000.
+        char *name = AllNames + (rnames * 32);
 
-        strcpy(newRegister.name,name);
+        strcpy(newRegister.name, name);
 
         strcpy(newRegister.type,"Perro");
         newRegister.age = rand() % 14 + 1;                                          // Selecciona un número aleatorio entre 1 y 14.
@@ -49,13 +50,17 @@ int main(){
         newRegister.weight = rand() % 14 + 1;                                       // Elije un peso aleatorio entre 1 y 15.
 
         newRegister.gender = Genders[rand() % 2];                                   // Elije un género aleatorio entre 'M' y 'H'.
-
-        id = insertElement(&table, newRegister.name, 1);                            // Se agrega el elemento a la tabla hash.
+        id = insertElement(&table, &newRegister.name[0], 1);                        // Se agrega el elemento a la tabla hash.
 
         fwrite(&id, sizeof(long), 1, file);                                         // Se escribe la id del elemento en la tabla hash.
         fwrite(&newRegister, sizeof(struct dogType), 1, file);                      // Se escriben los datos anteriormente solicitados en el archivo.
     }
+    printf("Registros creados\n\n");
     fclose(file);
     fclose(names);
+    printf("%i registros en la tabla\n", contarRegistros(&table));
+    printf("Guardando tabla... ");
+    SaveTable(&table);
+    printf("Tabla guardada\n");
     return 0;
 }

@@ -114,11 +114,14 @@ void WriteLog(int opcion, char* IP, char* Registro){
 
 // Lee un nombre de un archivo.
 void leer(char* name, FILE* file){
-    int i = 0;
-    do{
-        fread((name+i),1,1,file);
-        i++;
-    }while(*(name+i-1)!='\n');
-    *(name+i-1) =  '\0';
-    file ++;
+    for(int j = 0; j<1700; j++){
+        int i = 0;
+        char *a;
+        do{
+            a = (name + i + (32*j));
+            fread(a, 1, 1, file);
+            i++;
+        }while(*a !='\n' && i <32);
+        *a = '\0';
+    }
 }
