@@ -8,7 +8,7 @@ void PressToContinue();
 void InitConsole();
 void DisposeConsole();
 _Bool equals(char *String1, char *String2);
-char* IntToString(unsigned int toConvert);
+char* IntToString(unsigned long toConvert);
 void toUpperCase(char *word);
 void toLowerCase(char *word);
 void CopyString(char *original, char *copy);

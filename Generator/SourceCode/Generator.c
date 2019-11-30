@@ -20,7 +20,7 @@ int main(){
     }
 
     srand(time(NULL));                                                              // Se elige una semilla aleatoria.
-    struct HashTable table = CreateTable();                                         // Se Inicializa la tabla hash.
+    struct HashTable *table = CreateTable();                                        // Se Inicializa la tabla hash.
     char* Breeds[] = {"Labrador", "Pug", "Bulldog", "Chihuahua", "Golden",          
                       "Dalmata", "Pastor", "Labrador", "San Bernardo"};             // Se crea arreglo con razas.
     char Genders[] = {'M','H'};                                                     // Se crea arreglo con géneros.
@@ -31,7 +31,7 @@ int main(){
     struct dogType newRegister;
     
     for(int i = 0; i<NUMESTRUCTURAS; i++){
-        if(i%100000 == 0)
+        if(i%1000000 == 0)
             printf("Registros creados: %i\n", i);
         bzero(&newRegister, sizeof(struct dogType));                                // Crea una estructura con 0 en todos sus bits.
 
@@ -50,7 +50,7 @@ int main(){
         newRegister.weight = rand() % 14 + 1;                                       // Elije un peso aleatorio entre 1 y 15.
 
         newRegister.gender = Genders[rand() % 2];                                   // Elije un género aleatorio entre 'M' y 'H'.
-        id = insertElement(&table, &newRegister.name[0], 1);                        // Se agrega el elemento a la tabla hash.
+        id = insertElement(table, &newRegister.name[0]);                            // Se agrega el elemento a la tabla hash.
 
         fwrite(&id, sizeof(long), 1, file);                                         // Se escribe la id del elemento en la tabla hash.
         fwrite(&newRegister, sizeof(struct dogType), 1, file);                      // Se escriben los datos anteriormente solicitados en el archivo.
@@ -58,9 +58,9 @@ int main(){
     printf("Registros creados\n\n");
     fclose(file);
     fclose(names);
-    printf("%i registros en la tabla\n", contarRegistros(&table));
+    printf("%i registros en la tabla\n", table->Elements);
     printf("Guardando tabla... ");
-    SaveTable(&table);
+    SaveTable(table);
     printf("Tabla guardada\n");
     return 0;
 }

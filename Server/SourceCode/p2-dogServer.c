@@ -25,7 +25,7 @@ int serverfd;
 socklen_t len;
 int CurrentUsers;
 struct Client* clientsConnected[BACKLOG];
-struct HashTable Table;
+struct HashTable *Table;
 sem_t * semaphore;
 
 // Método para el hilo que se encarga de recibir datos de los clientes y ejecutar las solicitudes.
@@ -41,7 +41,7 @@ void* ListenRequest(void* args){
                 struct dogType *new = malloc(sizeof(struct dogType));
                 bzero(new,sizeof(struct dogType));
                 recv(Client->clientfd,new,sizeof(struct dogType),0);            // Recibe la estructura del cliente.
-                bool flag = IngresarRegistro(&Table,new);                       // La ingresa al sistema (Archivo dataDogs.dat y historia.)
+                bool flag = IngresarRegistro(Table,new);                        // La ingresa al sistema (Archivo dataDogs.dat y historia.)
                 send(Client->clientfd,&flag,sizeof(flag),0);                    // Envía confirmación al cliente si pudo ingresar el registro.
                 if(flag){
                     WriteLog(1,inet_ntoa(Client->Ip),new->name);                // Si se pudo añadir la historia correctamente, Se muestra lo dicho en el Log.
@@ -106,7 +106,7 @@ void* ListenRequest(void* args){
                     bzero(registro,sizeof(struct dogType));
                     recv(Client->clientfd,&id,sizeof(id),0);
 
-                    long exist = borrar(&Table,id);  
+                    long exist = borrar(Table,id);  
                     if(exist != -1){                                                                // Si el registro existe en la tabla hash y se puede borrar...
                         bool answer = true;
                         send(Client->clientfd,&answer,sizeof(answer),0);

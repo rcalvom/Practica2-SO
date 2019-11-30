@@ -17,7 +17,7 @@ _Bool equals(char *String1, char *String2){
 }
 
 // Convierte un entero a una cadena de caracteres.
-char* IntToString(unsigned int toConvert){
+char* IntToString(unsigned long toConvert){
     char *c = malloc(2);
     *c = (char)(toConvert%10 + '0');
     *(c+1) = '\0';
