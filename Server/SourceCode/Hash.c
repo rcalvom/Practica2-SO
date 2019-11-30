@@ -12,10 +12,13 @@ int hash(char *name){
             break;
         index += (*(name+i)+1)*(i+1);
     }
+    if(index < 0){
+        index *= -1;
+    }
     return index%TAMANOTABLA;
 }
 
-char* GetFileName(int index){
+char* GetFileName(long index){
     index = index%TAMANOTABLA;
     char *fileName = (char *) malloc(1);
     char *indexString = IntToString(index);
@@ -134,6 +137,7 @@ long insertElement(struct HashTable *table, char *nombre){
     } else if(table->LastIndex[index] == -1) {
         reg = fopen(fileName, "r+");
         long ResId;
+        id = index - TAMANOTABLA;
         while(feof(reg) == 0){
             int r = fread(&ResId, sizeof(long), 1, reg);
             r += fread(respaldoNombre, SIZE, 1, reg);
@@ -152,6 +156,7 @@ long insertElement(struct HashTable *table, char *nombre){
     } else if (table->LastIndex[index] == -2) {
         reg = fopen(fileName, "w+");
         id = index;
+        table->LastIndex[index] = id;
     }
     int w = fwrite(&id, sizeof(long), 1, reg);
     w += fwrite(nombre, SIZE, 1, reg);
