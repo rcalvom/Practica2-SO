@@ -163,10 +163,11 @@ int main(){
             case 4:{
                 send(clientfd,&MenuOption,sizeof(MenuOption),0);
                 char* name = BuscarRegistro();
-                send(clientfd,name,strlen(name),0);
+                send(clientfd,name,32,0);
                 long size;
                 recv(clientfd,&size,sizeof(size),0);
                 char* search = malloc(size);
+                bzero(search,size);
                 recv(clientfd,search,size,0);
                 printw("%s",search);
                 free(search);

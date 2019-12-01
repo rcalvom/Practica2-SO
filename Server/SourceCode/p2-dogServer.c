@@ -94,7 +94,7 @@ void* ListenRequest(void* args){
             }
             case 3:{                                                                                // Si la opción del cliente es Borrar Registro.
                 sem_wait(semaphore);
-                long NumRegisters = 0/*ContarTabla()*/;
+                long NumRegisters = Table->Elements;
                 long id;
                 bool flag;
                 send(Client->clientfd,&NumRegisters,sizeof(NumRegisters),0);                        // Envía al cliente la cantidad de registros en la tabla Hash.
@@ -145,12 +145,13 @@ void* ListenRequest(void* args){
             case 4:{                        // Si la opción del cliente es Buscar Registro.
                 sem_wait(semaphore);
                 char* name = malloc(32);
-                int size;
+                bzero(name,32);
                 recv(Client->clientfd,name,32,0);                                   // Recibe el nombre de la mascota a buscar.
 
-                //size = tamaño de la cadena a enviar;
-                //char* search = malloc(size);
-                //send(Client->clientfd,search,size,0);
+                char* search = buscarId(Table,name);
+                long size = strlen(search);
+                send(Client->clientfd,&size,sizeof(size),0);
+                send(Client->clientfd,search,strlen(search),0);
 
                 WriteLog(4,inet_ntoa(Client->Ip),name);                             // Escribe la acción en el Log.
                 sem_post(semaphore);

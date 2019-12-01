@@ -64,11 +64,11 @@ char* buscarId(struct HashTable *table, char *nombre){
         if(equals(nombre, respaldoNombre)){
             char *Id = IntToString(id);
 
-            /*strcat(ToString, "Id: ");
+            strcat(ToString, "Id: ");
             strcat(ToString, Id);
             strcat(ToString, ", Nombre: ");
             strcat(ToString, respaldoNombre);
-            strcat(ToString, "\n");*/
+            strcat(ToString, "\n");
             printf("ID: %s, Nombre: %s\n", Id, respaldoNombre);
 
             free(Id);
