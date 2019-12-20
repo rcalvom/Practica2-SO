@@ -100,17 +100,6 @@ int BorrarRegistro(struct HashTable* tabla, long id){
 
     bzero(registro, sizeof(struct dogType));
 
-    /*do{
-        registros = contarRegistros(tabla);
-
-        Enviar la cantidad de registros.
-
-    }while(registros == -1);*/
-
-    /*if(id == -1){
-        asm("jmp End");
-    }*/
-
     file = fopen("dataDogs.dat","r");                                               // Se abre un archivo que contiene las estructuras..
     temp = fopen("temp.dat","w+");                                                  // Se crea un archivo temporal donde se guardaran las estructuras que nos serán eliminadas.
     if(file == NULL || temp == NULL){

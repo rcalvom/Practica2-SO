@@ -7,15 +7,13 @@
 #include "Functions.h"
 #include "ShippingData.h"
 
-#define NUMESTRUCTURAS 1E7
-
-int main(){
-
+int main(int argc, char* argv[]){
+    int NUMESTRUCTURAS = atoi(argv[1]);
     long id;
     FILE *file, *names;
-    char* AllNames = (char *)malloc(32*1700);
+    char* AllNames = (char *) malloc(32*1700);
     if(AllNames == NULL){
-        printf("C mamo\n");
+        printf("El espacio no pudo ser reservado.\n");
         return -1;
     }
 
@@ -24,15 +22,20 @@ int main(){
     char* Breeds[] = {"Labrador", "Pug", "Bulldog", "Chihuahua", "Golden",          
                       "Dalmata", "Pastor", "Labrador", "San Bernardo"};             // Se crea arreglo con razas.
     char Genders[] = {'M','H'};                                                     // Se crea arreglo con géneros.
-    file = fopen("dataDogs.dat","w");                                               // Se abre el archivo que contendrá las estructuras.
+    file = fopen("dataDogs.dat","w+");                                              // Se abre el archivo que contendrá las estructuras.
     names = fopen("nombresMascotas.txt","r");                                       // Se abre el archivo que tiene los nombres.
+    if(names == NULL){
+        perror("Error: ");
+        exit(-1);
+    }
     leer(AllNames, names);
     fclose(names);
     struct dogType newRegister;
     
+    printf("Generador de estructuras:\n\n");
+    printf("Se van a crear %i estructuras...\n", NUMESTRUCTURAS);
+
     for(int i = 0; i<NUMESTRUCTURAS; i++){
-        if(i%1000000 == 0)
-            printf("Registros creados: %i\n", i);
         bzero(&newRegister, sizeof(struct dogType));                                // Crea una estructura con 0 en todos sus bits.
 
         int rnames = rand() % 1700;                                                 // Elije un número aleatorio entre 1 y 1000.
@@ -55,12 +58,11 @@ int main(){
         fwrite(&id, sizeof(long), 1, file);                                         // Se escribe la id del elemento en la tabla hash.
         fwrite(&newRegister, sizeof(struct dogType), 1, file);                      // Se escriben los datos anteriormente solicitados en el archivo.
     }
-    printf("Registros creados\n\n");
+    printf("Registros creados correctamente.\n\n");
     fclose(file);
-    fclose(names);
     printf("%i registros en la tabla\n", table->Elements);
     printf("Guardando tabla... ");
     SaveTable(table);
-    printf("Tabla guardada\n");
+    printf("Tabla guardada.\n");
     return 0;
 }

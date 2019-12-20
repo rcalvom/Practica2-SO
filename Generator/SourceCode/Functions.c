@@ -114,7 +114,7 @@ void WriteLog(int opcion, char* IP, char* Registro){
 
 // Lee un nombre de un archivo.
 void leer(char* name, FILE* file){
-    for(int j = 0; j<1700; j++){
+    for(int j = 0; j < 1700; j++){
         int i = 0;
         char *a;
         do{

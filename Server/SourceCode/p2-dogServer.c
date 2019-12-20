@@ -34,9 +34,9 @@ void* ListenRequest(void* args){
     printf("Escuchando peticiones del cliente %s ...\n\n",inet_ntoa(Client->Ip));
     while(true){                                   
         int option;                                  
-        recv(Client->clientfd, &option, sizeof(int), 0);                         // Recibe la opción del menú dada por el usuario.
+        recv(Client->clientfd, &option, sizeof(int), 0);                        // Recibe la opción del menú dada por el usuario.
         switch (option){
-            case 1:{                        // Si la opción del cliente es Ingresar Registro.
+            case 1:{                                                            // Si la opción del cliente es Ingresar Registro.
                 sem_wait(semaphore);
                 struct dogType *new = malloc(sizeof(struct dogType));
                 bzero(new,sizeof(struct dogType));
@@ -51,7 +51,7 @@ void* ListenRequest(void* args){
                 sem_post(semaphore);
                 break;
             }
-            case 2:{                        // Si la opción del cliente es Ver Registro.
+            case 2:{                                                            // Si la opción del cliente es Ver Registro.
                 sem_wait(semaphore);
                 long idRegister;
                 recv(Client->clientfd,&idRegister,sizeof(idRegister),0);        // Recibe el id del registro que va a buscar.
@@ -142,7 +142,7 @@ void* ListenRequest(void* args){
                 sem_post(semaphore);
                 break;
             }
-            case 4:{                        // Si la opción del cliente es Buscar Registro.
+            case 4:{                                                                // Si la opción del cliente es Buscar Registro.
                 sem_wait(semaphore);
                 char* name = malloc(32);
                 bzero(name,32);

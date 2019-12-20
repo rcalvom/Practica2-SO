@@ -6,7 +6,7 @@
 
 struct dogType IngresarRegistro(){
     struct dogType new;
-    bzero(&new,sizeof(struct dogType));
+    bzero(&new, sizeof(struct dogType));
     int r = 0;
     printw("Ingresar registro:\n");                                         // Se piden los datos y se almacenan en la estructura.
     printw("Indique el nombre de la mascota: ");
