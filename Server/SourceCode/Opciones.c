@@ -26,7 +26,6 @@ bool IngresarRegistro(struct HashTable* tabla, struct dogType *new){
         free(values);
         return false;
     }
-
     id = insertElement(tabla, new->name);
     bzero(filename, 16);
     bzero(filepath, 46);

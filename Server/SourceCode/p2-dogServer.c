@@ -36,23 +36,23 @@ void* ListenRequest(void* args){
         int option;                                  
         recv(Client->clientfd, &option, sizeof(int), 0);                        // Recibe la opción del menú dada por el usuario.
         switch (option){
-            case 1:{                                                            // Si la opción del cliente es Ingresar Registro.
-                sem_wait(semaphore);
+            case 1:{                                                           // Si la opción del cliente es Ingresar Registro.
+                //sem_wait(semaphore);
                 struct dogType *new = malloc(sizeof(struct dogType));
                 bzero(new,sizeof(struct dogType));
                 recv(Client->clientfd,new,sizeof(struct dogType),0);            // Recibe la estructura del cliente.
                 bool flag = IngresarRegistro(Table,new);                        // La ingresa al sistema (Archivo dataDogs.dat y historia.)
-                send(Client->clientfd,&flag,sizeof(flag),0);                    // Envía confirmación al cliente si pudo ingresar el registro.
+                send(Client->clientfd, &flag, sizeof(flag),0);                  // Envía confirmación al cliente si pudo ingresar el registro.
                 if(flag){
                     WriteLog(1,inet_ntoa(Client->Ip),new->name);                // Si se pudo añadir la historia correctamente, Se muestra lo dicho en el Log.
-                    printf("Inserción de %s por el cliente %s correctamente...\n",new->name,inet_ntoa(Client->Ip));
+                    printf("Inserción de %s por el cliente %s correctamente...\n", new->name, inet_ntoa(Client->Ip));
                 }               
                 free(new);
-                sem_post(semaphore);
+                //sem_post(semaphore);
                 break;
             }
             case 2:{                                                            // Si la opción del cliente es Ver Registro.
-                sem_wait(semaphore);
+                //sem_wait(semaphore);
                 long idRegister;
                 recv(Client->clientfd,&idRegister,sizeof(idRegister),0);        // Recibe el id del registro que va a buscar.
                 bool existFile = ExisteRegistro(idRegister);                    // Analiza si exíste la historia clínica de dicha id.
@@ -89,11 +89,11 @@ void* ListenRequest(void* args){
                         free(id);
                     }
                 }
-                sem_post(semaphore);
+                //sem_post(semaphore);
                 break;
             }
             case 3:{                                                                                // Si la opción del cliente es Borrar Registro.
-                sem_wait(semaphore);
+                //sem_wait(semaphore);
                 long NumRegisters = Table->Elements;
                 long id;
                 bool flag;
@@ -139,11 +139,11 @@ void* ListenRequest(void* args){
                         send(Client->clientfd,&answer,sizeof(answer),0);
                     }                                                                               
                 }
-                sem_post(semaphore);
+                //sem_post(semaphore);
                 break;
             }
             case 4:{                                                                // Si la opción del cliente es Buscar Registro.
-                sem_wait(semaphore);
+                //sem_wait(semaphore);
                 char* name = malloc(32);
                 bzero(name,32);
                 recv(Client->clientfd,name,32,0);                                   // Recibe el nombre de la mascota a buscar.
@@ -154,7 +154,7 @@ void* ListenRequest(void* args){
                 send(Client->clientfd,search,strlen(search),0);
 
                 WriteLog(4,inet_ntoa(Client->Ip),name);                             // Escribe la acción en el Log.
-                sem_post(semaphore);
+                //sem_post(semaphore);
                 break;
             }
         }
