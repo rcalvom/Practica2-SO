@@ -18,7 +18,7 @@ int hash(char *name){
     return index%TAMANOTABLA;
 }
 
-char* GetFileName(long index){
+char* GetFileName(int index){
     index = index%TAMANOTABLA;
     char *fileName = (char *) malloc(1);
     char *indexString = IntToString(index);
@@ -84,33 +84,35 @@ char* buscarId(struct HashTable *table, char *nombre){
     return ToString;
 }
 
-// Borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demas 
-// Elementos que esten en la misma posicion de la tabla
+//borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demas 
+//elementos que esten en la misma posicion de la tabla
 long borrar(struct HashTable *table, long id){
     char *fileName = GetFileName(id);
-    FILE *file = fopen(fileName, "r+"), *f;
+    FILE *file = fopen(fileName, "r+");
     free(fileName);
     if(file == NULL)
         return -1;
     while(feof(file) == 0){
         long FNId;
         int r = 0;
-        f = file;
         r += fread(&FNId, sizeof(long), 1, file);
         for(int i = 0; i<SIZE; i++){
-            char c = fgetc(f);
+            char c = fgetc(file);
         }
         if(FNId == id){
-            fseek(f, -40, SEEK_CUR);
+            fseek(file, -40, SEEK_CUR);
             int w = 0; long p = -1;
-            w += fwrite(&p, sizeof(long), 1, f);
+            w += fwrite(&p, sizeof(long), 1, file);
             for (int i = 0; i< SIZE; i++)
-                fputc('\0', f);
+                fputc('\0', file);
             table->LastIndex[id%TAMANOTABLA] = -1;
             table->Elements--;
+	        fclose(file);
             return id;
-        }
+        } else if(FNId > id)
+	        break;
     }
+    fclose(file);
     return -1;
 }
 
@@ -140,7 +142,6 @@ long insertElement(struct HashTable *table, char *nombre){
     } else if(table->LastIndex[index] == -1) {
         reg = fopen(fileName, "r+");
         long ResId;
-        id = index - TAMANOTABLA;
         while(feof(reg) == 0){
             int r = fread(&ResId, sizeof(long), 1, reg);
             r += fread(respaldoNombre, SIZE, 1, reg);
