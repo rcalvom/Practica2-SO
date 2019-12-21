@@ -65,7 +65,7 @@ char* buscarId(struct HashTable *table, char *nombre){
             char *Id = IntToString(id);
 
             ToString = realloc(ToString, strlen(ToString) + 67);
-            bzero(ToString + strlen(ToString),68);
+            bzero(ToString + strlen(ToString), 67);
             strcat(ToString, "Id: ");
             strcat(ToString, Id);
             strcat(ToString, ", Nombre: ");

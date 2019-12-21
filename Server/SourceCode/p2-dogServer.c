@@ -151,7 +151,9 @@ void* ListenRequest(void* args){
                 long size = strlen(search);
                 send(Client->clientfd,&size,sizeof(size),0);
                 send(Client->clientfd,search,strlen(search),0);
-                WriteLog(4,inet_ntoa(Client->Ip.sin_addr),name);                   // Escribe la acción en el Log.
+                WriteLog(4,inet_ntoa(Client->Ip.sin_addr),name);                    // Escribe la acción en el Log.
+                free(search);
+                free(name);
                 sem_post(semaphore);
                 break;
             }
