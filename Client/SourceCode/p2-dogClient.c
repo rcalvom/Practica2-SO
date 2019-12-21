@@ -159,13 +159,14 @@ int main(){
                 send(clientfd,&MenuOption,sizeof(MenuOption),0);
                 char* name = BuscarRegistro();
                 send(clientfd,name,32,0);                                                   // Envía el nombre de la mascota.
-                long size;
+                long size = 0;
                 recv(clientfd,&size,sizeof(size),0);                                        // Recibe el tamaño de la lista a leer.
                 char* search = malloc(size);
-                bzero(search,size);
+                bzero(search,size); ////////////////////////////////////////////////////
                 recv(clientfd,search,size,0);                                               // Recibe la lista con las coincidencias encontradas.
                 printw("%s",search);                                                        // Imprime la lista.
                 free(search);
+                free(name);
                 break;
             } 
             case 5:{                                                                        // Si el usuario quiere salir del programa.

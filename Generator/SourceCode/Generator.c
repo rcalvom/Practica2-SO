@@ -12,10 +12,6 @@ int main(int argc, char* argv[]){
     long id;
     FILE *file, *names, *historia;
     char* AllNames = malloc(32*1700);
-    char* mensajeHistoria = malloc(200);
-    char* path = malloc(46);
-    char* idchar = malloc(16);
-    char* values = malloc(10);
     if(AllNames == NULL){
         printf("El espacio no pudo ser reservado.\n");
         return -1;
@@ -62,40 +58,6 @@ int main(int argc, char* argv[]){
         fwrite(&id, sizeof(long), 1, file);                                         // Se escribe la id del elemento en la tabla hash.
         fwrite(&newRegister, sizeof(struct dogType), 1, file);                      // Se escriben los datos anteriormente solicitados en el archivo.
 
-        bzero(mensajeHistoria,200);
-        bzero(path,46);
-        bzero(idchar,16);
-        bzero(values,10);
-
-        sprintf(idchar,"%li",id);
-        strcat(path,"historias/");
-        strcat(path,idchar);
-        strcat(path,".dat");
-
-        strcat(mensajeHistoria,"Historia clinica.\n\nNombre: ");               // Escribe en el archivo de historia clinica toda la información de la mascota
-        strcat(mensajeHistoria,newRegister.name);
-        strcat(mensajeHistoria,"\nTipo: ");
-        strcat(mensajeHistoria,newRegister.type);
-        strcat(mensajeHistoria,"\nEdad: ");
-        sprintf(values,"%i",newRegister.age);
-        strcat(mensajeHistoria,values);
-        strcat(mensajeHistoria,"\nRaza: ");
-        strcat(mensajeHistoria,&newRegister.breed[0]);
-        strcat(mensajeHistoria,"\nEstatura: ");
-        sprintf(values,"%i",newRegister.height);
-        strcat(mensajeHistoria,values);
-        strcat(mensajeHistoria,"\nPeso: ");
-        sprintf(values,"%f",newRegister.weight);    
-        strcat(mensajeHistoria,values);
-        strcat(mensajeHistoria,"\nGénero: ");
-        strcat(mensajeHistoria,&newRegister.gender);
-
-        historia = fopen(path,"w+");
-
-        fwrite(mensajeHistoria,strlen(mensajeHistoria),1,historia);
-        fclose(historia);
-
-
     }
     printf("Registros creados correctamente.\n\n");
     fclose(file);
@@ -103,10 +65,6 @@ int main(int argc, char* argv[]){
     printf("Guardando tabla... ");
     SaveTable(table);
     printf("Tabla guardada.\n");
-    free(path);
-    free(mensajeHistoria);
-    free(idchar);
-    free(values);
     free(AllNames);
     return 0;
 }
