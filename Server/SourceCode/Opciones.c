@@ -26,7 +26,9 @@ bool IngresarRegistro(struct HashTable* tabla, struct dogType *new){
         free(values);
         return false;
     }
+    printf("Banderita discretisima 1\n");
     id = insertElement(tabla, new->name);
+    printf("Banderita discretisima 2\n");
     bzero(filename, 16);
     bzero(filepath, 46);
     bzero(mensajeHistoria,200);
@@ -87,6 +89,7 @@ bool IngresarRegistro(struct HashTable* tabla, struct dogType *new){
     free(filename);
     free(filepath);
     free(values);
+    SaveTable(tabla);
     return true;
 }
 
@@ -143,6 +146,7 @@ int BorrarRegistro(struct HashTable* tabla, long id){
     borrar(tabla, id);
     asm("End:");
     free(registro); 
+    SaveTable(tabla);
     return 0;
 }
 
