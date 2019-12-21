@@ -64,13 +64,13 @@ char* buscarId(struct HashTable *table, char *nombre){
         if(equals(nombre, respaldoNombre)){
             char *Id = IntToString(id);
 
-            ToString = realloc(ToString, strlen(ToString) + 66);
-            bzero(ToString + strlen(ToString),68);
+            ToString = realloc(ToString, strlen(ToString) + 67);
+            //bzero(ToString + strlen(ToString),68);
             strcat(ToString, "Id: ");
             strcat(ToString, Id);
             strcat(ToString, ", Nombre: ");
             strcat(ToString, respaldoNombre);
-            strcat(ToString, "\n");
+            strcat(ToString, "\n\0");
 
             //printf("ID: %s, Nombre: %s\n", Id, respaldoNombre);
 
