@@ -71,7 +71,7 @@ int main(){
                 printw("Enviando registro al servidor...\n");
                 send(clientfd, &MenuOption, sizeof(MenuOption), 0);                         // Le envía la opcion al servidor.
                 send(clientfd, &new, sizeof(new), 0);                                       // le envia la estructura con la nueva mascota.
-                recv(clientfd, &answer, sizeof(bool), 0);                                   // Recibe una respuesta que indica si se pudo realizar la inserción correctamente.
+                recv(clientfd, &answer, sizeof(answer), 0);                                 // Recibe una respuesta que indica si se pudo realizar la inserción correctamente.
                 if(answer){
                     printw("Los datos de %s se han registrado correctamente.\n",new.name);
                 }else{

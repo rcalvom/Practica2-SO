@@ -19,7 +19,7 @@ struct dogType{
 struct Client{
     int clientfd;
     pthread_t idThread;
-    struct in_addr Ip;
+    struct sockaddr_in Ip;
 };
 
 #endif

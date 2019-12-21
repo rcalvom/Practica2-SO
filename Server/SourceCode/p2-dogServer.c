@@ -31,7 +31,7 @@ sem_t * semaphore;
 // Método para el hilo que se encarga de recibir datos de los clientes y ejecutar las solicitudes.
 void* ListenRequest(void* args){
     struct Client *Client = (struct Client*) args;
-    printf("Escuchando peticiones del cliente %s ...\n\n",inet_ntoa(Client->Ip));
+    printf("Escuchando peticiones del cliente %s ...\n\n",inet_ntoa(Client->Ip.sin_addr));
     while(true){                                   
         int option;                                  
         recv(Client->clientfd, &option, sizeof(int), 0);                        // Recibe la opción del menú dada por el usuario.
@@ -44,8 +44,8 @@ void* ListenRequest(void* args){
                 bool flag = IngresarRegistro(Table,new);                        // La ingresa al sistema (Archivo dataDogs.dat y historia.)
                 send(Client->clientfd, &flag, sizeof(flag),0);                  // Envía confirmación al cliente si pudo ingresar el registro.
                 if(flag){
-                    WriteLog(1,inet_ntoa(Client->Ip),new->name);                // Si se pudo añadir la historia correctamente, Se muestra lo dicho en el Log.
-                    printf("Inserción de %s por el cliente %s correctamente...\n", new->name, inet_ntoa(Client->Ip));
+                    WriteLog(1,inet_ntoa(Client->Ip.sin_addr),new->name);       // Si se pudo añadir la historia correctamente, Se muestra lo dicho en el Log.
+                    printf("Inserción de %s por el cliente %s correctamente...\n", new->name, inet_ntoa(Client->Ip.sin_addr));
                 }               
                 free(new);
                 //sem_post(semaphore);
@@ -84,8 +84,8 @@ void* ListenRequest(void* args){
                         free(data);
                         char* id = malloc(10);
                         sprintf(id,"%li",idRegister);
-                        WriteLog(2,inet_ntoa(Client->Ip),id);                   // Registra la busqueda en los Logs.
-                        printf("Edición de la historia de %s por el cliente %s correctamente...\n",id,inet_ntoa(Client->Ip));
+                        WriteLog(2,inet_ntoa(Client->Ip.sin_addr),id);          // Registra la busqueda en los Logs.
+                        printf("Edición de la historia de %s por el cliente %s correctamente...\n",id,inet_ntoa(Client->Ip.sin_addr));
                         free(id);
                     }
                 }
@@ -130,8 +130,8 @@ void* ListenRequest(void* args){
                         remove(FilePath(id));                                                       // Elimina la historia clínica de la mascota eliminada.
                         char* idChar = malloc(10);
                         sprintf(idChar,"%li",id);
-                        WriteLog(3,inet_ntoa(Client->Ip),idChar);                                   // Escribe el registro de la acción.
-                        printf("Eliminación de %s por el cliente %s correctamente...\n",idChar,inet_ntoa(Client->Ip));
+                        WriteLog(3,inet_ntoa(Client->Ip.sin_addr),idChar);                          // Escribe el registro de la acción.
+                        printf("Eliminación de %s por el cliente %s correctamente...\n",idChar,inet_ntoa(Client->Ip.sin_addr));
                         free(registro);
                         free(idChar);
                     }else{
@@ -153,7 +153,7 @@ void* ListenRequest(void* args){
                 send(Client->clientfd,&size,sizeof(size),0);
                 send(Client->clientfd,search,strlen(search),0);
 
-                WriteLog(4,inet_ntoa(Client->Ip),name);                             // Escribe la acción en el Log.
+                WriteLog(4,inet_ntoa(Client->Ip.sin_addr),name);                   // Escribe la acción en el Log.
                 //sem_post(semaphore);
                 break;
             }
@@ -183,7 +183,7 @@ int main(){
     printf("Bienvenido a la apliación cliente.\n\n");                               
     printf("Inicializando servidor...\n");
 
-    len = sizeof(struct sockaddr);
+    len = sizeof(struct sockaddr_in);
     for(int i = 0; i<BACKLOG; i++){
         clientsConnected[i] = (struct Client*) malloc(sizeof(struct Client)); 
         bzero(clientsConnected[i], sizeof(struct Client));
@@ -223,13 +223,12 @@ int main(){
 
     CurrentUsers = 0;
     while(true){
-        int clientfd = accept(serverfd, (struct sockaddr*) &clientfd, &len);        // Se acepta una solicitud de conexión entrante.
-        clientsConnected[CurrentUsers]->Ip.s_addr = clientfd;
+        int clientfd = accept(serverfd, (struct sockaddr*) &clientsConnected[CurrentUsers]->Ip, &len);        // Se acepta una solicitud de conexión entrante.
         clientsConnected[CurrentUsers]->clientfd = clientfd;
         if(clientfd == -1){
-            printf("La conexión entrante de la Ip %s no pudo ser aceptada.\n",inet_ntoa(clientsConnected[CurrentUsers]->Ip));
+            printf("La conexión entrante de la Ip %s no pudo ser aceptada.\n",inet_ntoa(clientsConnected[CurrentUsers]->Ip.sin_addr));
         }else{
-            printf("El remoto %s se ha conectado correctamente.\n",inet_ntoa(clientsConnected[CurrentUsers]->Ip));      
+            printf("El remoto %s se ha conectado correctamente.\n",inet_ntoa(clientsConnected[CurrentUsers]->Ip.sin_addr));      
             pthread_create(&clientsConnected[CurrentUsers]->idThread,NULL, ListenRequest, clientsConnected[CurrentUsers]);  // Se crea un hilo que se encarga de recibir datos entrantes.
             CurrentUsers++;
         }
