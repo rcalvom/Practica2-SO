@@ -147,12 +147,10 @@ void* ListenRequest(void* args){
                 char* name = malloc(32);
                 bzero(name,32);
                 recv(Client->clientfd,name,32,0);                                   // Recibe el nombre de la mascota a buscar.
-
                 char* search = buscarId(Table,name);
                 long size = strlen(search);
                 send(Client->clientfd,&size,sizeof(size),0);
                 send(Client->clientfd,search,strlen(search),0);
-
                 WriteLog(4,inet_ntoa(Client->Ip.sin_addr),name);                   // Escribe la acción en el Log.
                 //sem_post(semaphore);
                 break;
