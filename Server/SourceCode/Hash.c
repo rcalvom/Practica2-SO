@@ -30,30 +30,50 @@ char* GetFileName(int index){
     return fileName;
 }
 
+bool ExisteElElemento(long id){
+    char *fileName = GetFileName(id);
+    FILE *file = fopen(fileName, "r");
+    free(fileName);
+    if(file == NULL)
+        return false;
+    while(feof(file) == 0) {
+        long IdLeido;
+        int r = fread(&IdLeido, sizeof(long), 1, file);
+        fseek(file, 32, SEEK_CUR);
+        if(r < 1){
+            break;
+        }
+        if(id == IdLeido){
+            fclose(file);
+            return true;
+        } else if(IdLeido > id){
+            break;
+        }
+    }
+    fclose(file);
+    return false;
+}
+
 //busca e imprime todos los registros que coincidan con un nombre dado
-char* buscarId(struct HashTable *table, char *nombre){
+struct String* buscarId(struct HashTable *table, char *nombre){
     int index;
     char *respaldoNombre = malloc(SIZE), *fileName;
+    FILE *res = fopen("Res.txt", "w+"), *file;
+    struct String* string = malloc(sizeof(struct String));
     bzero(respaldoNombre, SIZE);
     CopyString(nombre, respaldoNombre);
     toUpperCase(respaldoNombre);
     index = hash(respaldoNombre);
     fileName = GetFileName(index);
-    FILE *file = fopen(fileName, "r");
+    file = fopen(fileName, "r");
     if(file == NULL){
         free(respaldoNombre);
         free(fileName);
-        return '\0';
+        free(string);
+        fclose(res);
+        return NULL;
     }
-
-    char *ToString = malloc(1);
-    if(ToString == NULL) {
-        free(respaldoNombre);
-        free(fileName);
-        fclose(file);
-        return '\0';
-    }
-    *ToString = '\0';
+    string->length = 0;
     while(feof(file) == 0) {
         long id;
         int r = fread(&id, sizeof(long), 1, file);
@@ -62,26 +82,33 @@ char* buscarId(struct HashTable *table, char *nombre){
             break;
         }
         if(equals(nombre, respaldoNombre)){
-            char *Id = IntToString(id);
+            struct String elemento;
+            char *ide = IntToString(id);
+            elemento.string = malloc(1);
+            *elemento.string = '\0';
 
-            ToString = realloc(ToString, strlen(ToString) + 67);
-            bzero(ToString + strlen(ToString), 67);
-            strcat(ToString, "Id: ");
-            strcat(ToString, Id);
-            strcat(ToString, ", Nombre: ");
-            strcat(ToString, respaldoNombre);
-            strcat(ToString, "\n\0");
+            strcat(elemento.string, "Id: ");
+            strcat(elemento.string, ide);
+            strcat(elemento.string, ", Nombre: ");
+            strcat(elemento.string, respaldoNombre);
+            strcat(elemento.string, "\n");
 
-            //printf("ID: %s, Nombre: %s\n", Id, respaldoNombre);
+            elemento.length = strlen(elemento.string);
+            string->length += elemento.length;
+            int w = fwrite(elemento.string, elemento.length, 1, res);
 
-            free(Id);
+            free(elemento.string);
+            free(ide);
         }
     }
-
+    rewind(res);
+    string->string = malloc(string->length);
+    fread(string->string, string->length, 1, res);
     free(respaldoNombre);
     free(fileName);
     fclose(file);
-    return ToString;
+    fclose(res);
+    return string;
 }
 
 //borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demas 
