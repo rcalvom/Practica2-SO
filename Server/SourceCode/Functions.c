@@ -114,7 +114,9 @@ void WriteLog(int opcion, char* IP, char* Registro){
 
     fclose(file);
     free(log);
+    log = NULL;
     free(date);
+    date = NULL;
 }
 
 // Dada una id, devuelve la ruta de la historia clinica asociada a esa id.
@@ -164,9 +166,35 @@ bool CreateClinicHistory(long id, struct dogType* pet){
     strcat(data, &pet->gender);
     fwrite(data, strlen(data), 1, file);
     free(data);
+    data = NULL;
     free(age);
+    age = NULL;
     free(height);
+    height = NULL;
     free(weight);
+    weight = NULL;
     fclose(file);
     return true;
 }
+
+// Devuelve la estructura con id en el archivo dataDogs.dat
+struct dogType* FindPetById(long id){
+    FILE *dataDogs;
+    struct dogType *pet;
+    long idTemp;
+
+    pet = malloc(sizeof(struct dogType));
+    bzero(pet, sizeof(struct dogType));
+    idTemp = 0;
+    dataDogs = fopen("dataDogs.dat", "r");
+
+    while(!feof(dataDogs)){
+        fread(&idTemp, sizeof(idTemp), 1, dataDogs);
+        fread(pet, sizeof(struct dogType), 1, dataDogs);
+        if(idTemp == id){
+            break;
+        }
+    }
+    return pet;
+}
+

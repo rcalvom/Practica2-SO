@@ -18,6 +18,7 @@ void WriteLog(int opcion, char* IP, char* Registro);
 char* FilePath(long id); 
 bool ExisteRegistro(long id);
 bool CreateClinicHistory(long id, struct dogType* pet);
+struct dogType* FindPetById(long id);
 
 
 #endif

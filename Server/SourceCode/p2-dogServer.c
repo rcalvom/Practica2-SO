@@ -65,31 +65,12 @@ void* ListenRequest(void* args){
                         char* data, *id;
                         file = fopen(FilePath(idRegister), "r");
                         if(file == NULL){                                       // Si la historia clínica no exite...
-                            FILE *dataDogs;
-                            struct dogType *pet;
-                            long idTemp;
-                            
-                            pet = malloc(sizeof(struct dogType));
-                            bzero(pet, sizeof(struct dogType));
-                            idTemp = 0;
-                            dataDogs = fopen("dataDogs.dat", "r");
-                            
-                            while(!feof(dataDogs)){                             // Busque la estructura en el archivo.
-                                fread(&idTemp, sizeof(idTemp), 1, dataDogs);
-                                fread(pet, sizeof(struct dogType), 1, dataDogs);
-                                if(idTemp == idRegister){
-                                    break;
-                                }
-                            }
-
+                            struct dogType* pet = FindPetById(idRegister);
                             CreateClinicHistory(idRegister, pet);               // Y cree el archivo de historia clínica.
-                            fclose(dataDogs);
                             free(pet);
-                        }else{
-                            fclose(file);
+                            file = fopen(FilePath(idRegister), "r");
                         }
                         
-                        file = fopen(FilePath(idRegister), "r");                // Abre el archivo.
                         fseek(file, 0L, SEEK_END);
                         long size = ftell(file);
                         rewind(file);
@@ -107,6 +88,7 @@ void* ListenRequest(void* args){
                         file = fopen(FilePath(idRegister), "w+");        
                         fwrite(data, size, 1, file);                            // La escribe en el archivo.
                         fclose(file);
+                        
                         id = malloc(10);
                         bzero(id, 10);
                         sprintf(id, "%li", idRegister);
