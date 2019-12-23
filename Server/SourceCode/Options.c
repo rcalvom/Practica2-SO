@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <ncurses.h> 
 #include "Functions.h"
 #include "Hash.h"
 #include "ShippingData.h"
@@ -17,7 +16,6 @@ bool IngresarRegistro(struct HashTable* tabla, struct dogType *new){
     fwrite(new, sizeof(struct dogType), 1, dataDogs);                           // Se escriben los datos de la mascota anteriormente solicitados en el archivo.
     CreateClinicHistory(id, new);                                               // Se crea el archivo de historia clínica correspondiente.
     fclose(dataDogs);
-    SaveTable(tabla);
     return true;
 }
 
@@ -25,8 +23,7 @@ bool IngresarRegistro(struct HashTable* tabla, struct dogType *new){
 int BorrarRegistro(long id){
     long idTemp;
     FILE *file, *temp;
-    struct dogType* registro = malloc(sizeof(struct dogType));
-    bzero(registro, sizeof(struct dogType));
+    struct dogType* registro = Malloc(sizeof(struct dogType));
 
     file = fopen("dataDogs.dat", "r");                                          // Se abre un archivo que contiene las estructuras..
     temp = fopen("temp.dat", "w+");                                             // Se crea un archivo temporal donde se guardaran las estructuras que no serán eliminadas.
@@ -46,18 +43,6 @@ int BorrarRegistro(long id){
     remove("dataDogs.dat");                                                     // Se elimina el archivo viejo y ....
     rename("temp.dat", "dataDogs.dat");
     remove(FilePath(id));
-    free(registro);
-    return 0;
-}
-
-//Opción del menú Buscar Registro.
-int BuscarRegistro(struct HashTable* tabla, char *nombre){
-    char *nameToSearch = (char *) malloc(32);
-    if(nameToSearch == NULL){
-        return -1;
-    }
-    bzero(nameToSearch, 32);
-
-    free(nameToSearch);
+    Free(registro);
     return 0;
 }

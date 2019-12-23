@@ -8,6 +8,5 @@
 //Funciones correspondientes a las opciones indicadas.
 bool IngresarRegistro(struct HashTable* tabla, struct dogType *new);
 int BorrarRegistro(long id);
-int BuscarRegistro(struct HashTable* tabla, char *nombre);
 
 #endif

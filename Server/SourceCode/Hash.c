@@ -15,7 +15,7 @@ int hash(char *name){
     if(index < 0){
         index *= -1;
     }
-    return index%TAMANOTABLA;
+    return index % TAMANOTABLA;
 }
 
 char* GetFileName(int index){

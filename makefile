@@ -1,13 +1,13 @@
 CC = gcc
 
 all: Server/SourceCode/p2-dogServer.c Client/SourceCode/p2-dogClient.c Generator/SourceCode/Generator.c
-	@ $(CC) -IServer/Headers Server/SourceCode/Opciones.c Server/SourceCode/Functions.c Server/SourceCode/p2-dogServer.c Server/SourceCode/Hash.c -o Server/p2-dogServer -lpthread
+	@ $(CC) -IServer/Headers Server/SourceCode/Options.c Server/SourceCode/Functions.c Server/SourceCode/p2-dogServer.c Server/SourceCode/Hash.c -o Server/p2-dogServer -lpthread
 	@ $(CC) -IClient/Headers Client/SourceCode/Opciones.c Client/SourceCode/Functions.c Client/SourceCode/p2-dogClient.c -o Client/p2-dogClient -lncurses
 	@ $(CC) -IGenerator/Headers Generator/SourceCode/Hash.c Generator/SourceCode/Functions.c Generator/SourceCode/Generator.c -o Generator/Generator 
 	@ echo "Se ha compilado todo correctamente."
 
 server:	Server/SourceCode/p2-dogServer.c
-	@ $(CC) -IServer/Headers Server/SourceCode/Opciones.c Server/SourceCode/Functions.c Server/SourceCode/p2-dogServer.c Server/SourceCode/Hash.c -o Server/p2-dogServer -lpthread
+	@ $(CC) -IServer/Headers Server/SourceCode/Options.c Server/SourceCode/Functions.c Server/SourceCode/p2-dogServer.c Server/SourceCode/Hash.c -o Server/p2-dogServer -lpthread
 	@ echo "Se ha compilado la aplicación servidor correctamente."
 
 client:	Client/SourceCode/p2-dogClient.c
@@ -19,10 +19,10 @@ generator:	Generator/SourceCode/Generator.c
 	@ echo "Se ha compilado la aplicación del generador de estructuras correctamente."
 
 clean:
-	@ rm Server/p2-dogServer rm Client/p2-dogClient rm Generator/Generator
-	@ rm Server/serverDogs.log rm Server/dataDogs.dat
+	@ rm Server/serverDogs.log 
+	@ rm Server/dataDogs.dat
 	@ rm -R Server/historias
 	@ rm -R Server/HashNodes
 	@ mkdir Server/historias
 	@ mkdir Server/hashNodes
-	@ echo "Se han eliminado los archivos ejecutables y registros correctamente."
+	@ echo "Se han eliminado las historias y registros correctamente."
