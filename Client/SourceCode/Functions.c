@@ -1,5 +1,8 @@
 #include <ncurses.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <strings.h>
+#include <sys/socket.h>
 
 void PressToContinue(){
     printw("\nPulse cualquier tecla para continuar...\n");                        // Espera por una tecla para continuar.

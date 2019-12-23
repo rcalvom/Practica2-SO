@@ -122,7 +122,7 @@ int main(){
                         rewind(file);
                         Send(clientfd, &size, sizeof(size), 0);                             // Envia el tamaño del archivo modificado.
                         data = Malloc(size +1 );
-                        fread(data, size, 1, ile);
+                        fread(data, size, 1, file);
                         Send(clientfd, data, size, 0);                                      // Envía el archivo modificado.
                         Free(data);
                         fclose(file);

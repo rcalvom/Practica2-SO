@@ -2,6 +2,7 @@
 #include <strings.h>
 #include <ncurses.h>
 #include "Options.h"
+#include "Functions.h"
 #include "ShippingData.h"
 
 struct dogType IngresarRegistro(){
