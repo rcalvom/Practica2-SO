@@ -20,4 +20,9 @@ generator:	Generator/SourceCode/Generator.c
 
 clean:
 	@ rm Server/p2-dogServer rm Client/p2-dogClient rm Generator/Generator
-	@ echo "\nSe han eliminado los archivos ejecutables correctamente."
+	@ rm Server/serverDogs.log rm Server/dataDogs.dat
+	@ rm -R Server/historias
+	@ rm -R Server/HashNodes
+	@ mkdir Server/historias
+	@ mkdir Server/hashNodes
+	@ echo "Se han eliminado los archivos ejecutables y registros correctamente."

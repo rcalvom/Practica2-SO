@@ -108,11 +108,12 @@ struct String* buscarId(struct HashTable *table, char *nombre){
     free(fileName);
     fclose(file);
     fclose(res);
+    remove("Res.txt");
     return string;
 }
 
-//borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demas 
-//elementos que esten en la misma posicion de la tabla
+// Borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demás.
+// Elementos que esten en la misma posicion de la tabla.
 long borrar(struct HashTable *table, long id){
     char *fileName = GetFileName(id);
     FILE *file = fopen(fileName, "r+");

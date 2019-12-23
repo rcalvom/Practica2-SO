@@ -9,86 +9,14 @@
 
 //Opción del menú Ingresar Registro.
 bool IngresarRegistro(struct HashTable* tabla, struct dogType *new){
-    int r = 0; long id;
-    FILE *dataDogs, *historia;
-    char *values, *mensajeHistoria, *filepath, *filename;
-    dataDogs = fopen("dataDogs.dat","a");
-    filepath = malloc(46);
-    filename = malloc(16);
-    mensajeHistoria = malloc(200);
-    values = malloc(10);
-
-    if(dataDogs == NULL || filepath == NULL || filename == NULL || mensajeHistoria == NULL || values == NULL){
-        fclose(dataDogs);
-        free(filepath);
-        free(filename);
-        free(mensajeHistoria);
-        free(values);
-        return false;
-    }
-    printf("Banderita discretisima 1\n");
+    long id;
+    FILE *dataDogs;
+    dataDogs = fopen("dataDogs.dat", "a");
     id = insertElement(tabla, new->name);
-    printf("Banderita discretisima 2\n");
-    bzero(filename, 16);
-    bzero(filepath, 46);
-    bzero(mensajeHistoria,200);
-    bzero(values, 10);
-
-    sprintf(filename,"%li", id);
-    strcat(filepath,"historias/");
-    strcat(filepath,filename);
-    strcat(filepath,".dat");
-    toLowerCase(filepath);
-    historia = fopen(filepath,"w+");    
-
-    if(historia == NULL){
-        fclose(historia);
-        borrar(tabla, id);
-        fclose(dataDogs);
-        free(filepath);
-        free(filename);
-        free(mensajeHistoria);
-        free(values);
-        return false;
-    }
-
-    do{
-        r += fwrite(&id, sizeof(long), 1, dataDogs);                            // Se escribe en el archivo la Id correspondiente.
-    } while(r < 1);
-
-    do{
-        r += fwrite(new, sizeof(struct dogType), 1, dataDogs);                  // Se escriben los datos de la mascota anteriormente solicitados en el archivo.
-    } while (r < 2);
-
-    strcat(mensajeHistoria,"Historia clinica.\n\nNombre: ");               //Escribe en el archivo de historia clinica toda la información de la mascota
-    strcat(mensajeHistoria,new->name);
-    strcat(mensajeHistoria,"\nTipo: ");
-    strcat(mensajeHistoria,&new->type[0]);
-    strcat(mensajeHistoria,"\nEdad: ");
-    sprintf(values,"%i",new->age);
-    strcat(mensajeHistoria,values);
-    strcat(mensajeHistoria,"\nRaza: ");
-    strcat(mensajeHistoria,&new->breed[0]);
-    strcat(mensajeHistoria,"\nEstatura: ");
-    sprintf(values,"%i",new->height);
-    strcat(mensajeHistoria,values);
-    strcat(mensajeHistoria,"\nPeso: ");
-    sprintf(values,"%f",new->weight);
-    strcat(mensajeHistoria,values);
-    strcat(mensajeHistoria,"\nGénero: ");
-    strcat(mensajeHistoria,&new->gender);
-
-    r = 0;
-    do{
-        r += fwrite(mensajeHistoria, strlen(mensajeHistoria), 1, historia);
-    } while(r < 1);
-
+    fwrite(&id, sizeof(long), 1, dataDogs);                                     // Se escribe en el archivo la Id correspondiente.
+    fwrite(new, sizeof(struct dogType), 1, dataDogs);                           // Se escriben los datos de la mascota anteriormente solicitados en el archivo.
+    CreateClinicHistory(id, new);                                               // Se crea el archivo de historia clínica correspondiente.
     fclose(dataDogs);
-    fclose(historia);
-    free(mensajeHistoria);
-    free(filename);
-    free(filepath);
-    free(values);
     SaveTable(tabla);
     return true;
 }

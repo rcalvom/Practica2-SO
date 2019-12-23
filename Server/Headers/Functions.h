@@ -4,6 +4,7 @@
 #define SIZE 32
 
 #include <stdbool.h>
+#include "ShippingData.h"
 
 void PressToContinue();
 void InitConsole();
@@ -16,5 +17,7 @@ void CopyString(char *original, char *copy);
 void WriteLog(int opcion, char* IP, char* Registro);
 char* FilePath(long id); 
 bool ExisteRegistro(long id);
+bool CreateClinicHistory(long id, struct dogType* pet);
+
 
 #endif

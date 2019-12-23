@@ -78,7 +78,7 @@ void WriteLog(int opcion, char* IP, char* Registro){
 
     t = time(NULL);
     tm = localtime(&t);
-    strftime(date,50,"%Y%m%d%H%M%S",tm);
+    strftime(date,50,"%Y/%m/%d - %H:%M:%S",tm);
 
     strcat(log,"[Fecha ");
     strcat(log,date);
@@ -134,21 +134,39 @@ char* FilePath(long id){
     return filepath;
 }
 
-// Verifica si existe la historia con la id indicada.
-bool ExisteRegistro(long id){
-    char* filepath = FilePath(id);
-    FILE* file = fopen(filepath,"r");
-    if(file == NULL){
-        free(filepath);
-        if(file != NULL){
-            fclose(file);
-        }
-        return false;
-    }else{
-        free(filepath);
-        if(file != NULL){
-            fclose(file);
-        }
-        return true;
-    }
+// Escribe la historia clinica de la estructura e id dadas.
+bool CreateClinicHistory(long id, struct dogType* pet){
+    FILE *file;
+    char *data, *age, *height, *weight;
+    file = fopen(FilePath(id), "w+");
+    data = malloc(200);
+    age = malloc(10);
+    height = malloc(10);
+    weight = malloc(10);
+
+    sprintf(age, "%i", pet->age);
+    sprintf(height, "%i", pet->height);
+    sprintf(weight, "%f", pet->weight);
+
+    strcat(data, "Historia Clínica.\n\nNombre: ");
+    strcat(data, pet->name);
+    strcat(data, "\nTipo: ");
+    strcat(data, pet->type);
+    strcat(data, "\nEdad: ");
+    strcat(data, age);
+    strcat(data, "\nRaza: ");
+    strcat(data, pet->breed);
+    strcat(data, "\nEstatura: ");
+    strcat(data, height);
+    strcat(data, "\nPeso: ");
+    strcat(data, weight);
+    strcat(data, "\nGénero: ");
+    strcat(data, &pet->gender);
+    fwrite(data, strlen(data), 1, file);
+    free(data);
+    free(age);
+    free(height);
+    free(weight);
+    fclose(file);
+    return true;
 }
