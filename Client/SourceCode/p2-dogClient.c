@@ -11,21 +11,24 @@
 #include <stdbool.h>
 #include "Functions.h"
 #include "ShippingData.h"
-#include "Opciones.h"
+#include "Options.h"
 
 #define PORT 1234
 
 int main(){
+    int clientfd, r;
+    char* ipAddress = Malloc(15);
+    struct sockaddr_in client;
+    socklen_t len;
 
     InitConsole();                                                                          // Inicializa la consola de la libreria ncurses.
-    char* ipAddress = malloc(15);
+
     printw("Bienvenido a la apliación cliente.\n\n");
     printw("Ingrese la dirección ip del servidor: ");
     scanw("%s", ipAddress);                                                                 // Solicita la dirección ip del servidor.
 
-    int clientfd, r;
-    struct sockaddr_in client;
-    socklen_t len = sizeof(struct sockaddr);
+    len = sizeof(struct sockaddr);
+
     clientfd = socket(AF_INET,SOCK_STREAM,0);                                               // Se inicializa el socket.
     if(clientfd == -1){
         printw("El socket no pudo ser creado.\n");
@@ -33,11 +36,13 @@ int main(){
         DisposeConsole();
         exit(EXIT_FAILURE);
     }
+
     client.sin_family = AF_INET;
     client.sin_port = htons(PORT);
     client.sin_addr.s_addr = inet_addr(ipAddress);
-    bzero(client.sin_zero,8);
-    r = connect(clientfd,(struct sockaddr*)&client,len);                                    // Se conecta a el servidor.
+    bzero(client.sin_zero, 8);
+
+    r = connect(clientfd, (struct sockaddr*)&client, len);                                  // Se conecta a el servidor.
     if(r == -1){
         printw("No se pudo conectar al servidor en la dirección ip indicada.\n");
         PressToContinue();
@@ -45,10 +50,10 @@ int main(){
         exit(EXIT_SUCCESS);
     }
 
-    printw("\nSe ha logrado conectar al servidor correctamente.");
+    printw("\nSe ha logrado conectar al servidor correctamente.\n");
     PressToContinue();
 
-    _Bool quit = false;
+    bool quit = false;
     int MenuOption;
     while(!quit){                                                                           // Mientras el usuario no pida salir, imprimir el menú.
         fflush(stdin);                        
@@ -61,89 +66,85 @@ int main(){
         printw("Esperando opción: ");
         scanw("%i",&MenuOption);
         printw("\n");
-        int s = 0, l = 0;
 
         //Evaluación de las opciones de menú.
         switch (MenuOption){
-            case 1:{                                                                        // Si se desea ingresar registro.
+            case 1: {                                                                       // Si se desea ingresar registro.
                 bool answer;
                 struct dogType new = IngresarRegistro();                                    
                 printw("Enviando registro al servidor...\n");
-                send(clientfd, &MenuOption, sizeof(MenuOption), 0);                         // Le envía la opcion al servidor.
-                send(clientfd, &new, sizeof(new), 0);                                       // le envia la estructura con la nueva mascota.
-                recv(clientfd, &answer, sizeof(answer), 0);                                 // Recibe una respuesta que indica si se pudo realizar la inserción correctamente.
+                Send(clientfd, &MenuOption, sizeof(MenuOption), 0);                         // Le envía la opción al servidor.
+                Send(clientfd, &new, sizeof(new), 0);                                       // le envia la estructura con la nueva mascota.
+                Recv(clientfd, &answer, sizeof(answer), 0);                                 // Recibe una respuesta que indica si se pudo realizar la inserción correctamente.
                 if(answer){
-                    printw("Los datos de %s se han registrado correctamente.\n",new.name);
+                    printw("Los datos de %s se han registrado correctamente.\n", new.name);
                 }else{
-                    printw("No se ha registrado a la mascota correctamente.\n");
+                    printw("No se ha podido registrar a la mascota.\n");
                 }
                 break;
             }
             case 2:{                                                                        // Si se desea ver un registro.
                 bool existFile, request = false;
                 char clientAnswer;
-                send(clientfd, &MenuOption, sizeof(MenuOption), 0);                         // Se envía la opción del menú.    
+                Send(clientfd, &MenuOption, sizeof(MenuOption), 0);                         // Se envía la opción del menú.    
                 long id = VerRegistro();
                 printw("Enviando id al servidor...\n");
-                send(clientfd, &id, sizeof(id), 0);                                         // Se envia la id al servidor.
-                recv(clientfd, &existFile, sizeof(bool),0);                                 // Se recibe un booleano que indica si el archivo existe o no.
+                Send(clientfd, &id, sizeof(id), 0);                                         // Se envia la id al servidor.
+                Recv(clientfd, &existFile, sizeof(bool), 0);                                // Se recibe un booleano que indica si el archivo existe o no.
 
                 if(existFile){                                                              // Si el archivo si existe.
                     printw("El registro solicitado existe en el sistema.\n");
                     printw("¿Desea abrirlo para editarlo? (Y/N). ");
-                    scanw("%s",&clientAnswer);
+                    scanw("%s", &clientAnswer);
 
                     if(clientAnswer == 'Y' || clientAnswer == 'y'){
                         request = true;
                     }
 
-                    send(clientfd, &request, sizeof(request), 0);                           // Envía un booleando que indica si el usuario quiere ver el registro.
+                    Send(clientfd, &request, sizeof(request), 0);                           // Envía un booleano que indica si el usuario quiere ver el registro.
 
                     if(request){
                         FILE *file;
-                        char* data;
+                        char *data;
                         long size;
-                        recv(clientfd, &size, sizeof(size), 0);                             // Recibe el tamaño del archivo.
+                        Recv(clientfd, &size, sizeof(size), 0);                             // Recibe el tamaño del archivo.
                         file = fopen("Registro.dat","w+");
-                        data = malloc(size+1);
-                        bzero(data,size);
-                        recv(clientfd,data,size,0);                                         // Recibe el archivo.
-                        fwrite(data,size,1,file);
+                        data = Malloc(size + 1);
+                        Recv(clientfd,data,size,0);                                         // Recibe el archivo.
+                        fwrite(data, size, 1, file);
                         fclose(file);
-                        free(data);
+                        Free(data);
                         system("nano Registro.dat");                                        // Abre el archivo con el comando bash "nano".
                         InitConsole();
-                        file = fopen("Registro.dat","r");
-                        fseek(file,0L,SEEK_END);
+                        file = fopen("Registro.dat", "r");
+                        fseek(file, 0L, SEEK_END);
                         size = ftell(file);
                         rewind(file);
-                        send(clientfd,&size,sizeof(size),0);                                // Envia el tamaño del archivo modificado.
-                        data = malloc(size+1);
-                        bzero(data,size);
-                        fread(data,size,1,file);
-                        send(clientfd,data,size,0);                                         // Envía el archivo modificado.
-                        free(data);
+                        Send(clientfd, &size, sizeof(size), 0);                             // Envia el tamaño del archivo modificado.
+                        data = Malloc(size +1 );
+                        fread(data, size, 1, ile);
+                        Send(clientfd, data, size, 0);                                      // Envía el archivo modificado.
+                        Free(data);
                         fclose(file);
                         remove("Registro.dat");                                             // Elimina el archivo de la maquina cliente.
                     }                   
                 }else{
                     printw("El registro con la Id dada no existe en el sistema.\n");
                 }
-
                 break;
             }
-            case 3:{                                                                        // Si se desea borrar registro.
+            case 3: {                                                                       // Si se desea borrar registro.
                 long id, NumRegisters;
-                send(clientfd,&MenuOption,sizeof(MenuOption),0);                            // Envía la opción del menú.
-                recv(clientfd,&NumRegisters,sizeof(NumRegisters),0);                        // Recibe el número de registros en el sistema.
-                printw("En el sistema hay %li registros.\n",NumRegisters);
+                Send(clientfd, &MenuOption, sizeof(MenuOption), 0);                         // Envía la opción del menú.
+                Recv(clientfd, &NumRegisters, sizeof(NumRegisters), 0);                     // Recibe el número de registros en el sistema.
+                printw("En el sistema hay %li registros.\n", NumRegisters);
                 id = BorrarRegistro();
                 if(id != -1){                                                               // Si el usuario indica una id...
                     bool answer = true;
-                    send(clientfd,&answer,sizeof(bool),0);                                  
-                    send(clientfd,&id,sizeof(id),0);                                        // Envia la id.
+                    Send(clientfd, &answer, sizeof(bool), 0);                                  
+                    Send(clientfd, &id, sizeof(id), 0);                                     // Envia la id.
                     printw("Enviando id al servidor...\n");
-                    recv(clientfd,&answer,sizeof(answer),0);                                // Recibe la confirmación si el registro fue borrado satisfactoriamente.
+                    Recv(clientfd, &answer, sizeof(answer), 0);                             // Recibe la confirmación si el registro fue borrado satisfactoriamente.
                     if(answer){
                         printw("El registro fue borrado satisfactoriamente.\n");
                     }else{
@@ -151,31 +152,30 @@ int main(){
                     }
                 }else{                                                                      // Si el usuario cancela la operación.
                     bool answer = false;
-                    send(clientfd,&answer,sizeof(bool),0);
+                    Send(clientfd, &answer, sizeof(bool), 0);
                 }
                 break;
             }    
             case 4:{                                                                        // Si se desea buscar un registro.
-                send(clientfd,&MenuOption,sizeof(MenuOption),0);
+                Send(clientfd, &MenuOption,sizeof(MenuOption), 0);
                 char* name = BuscarRegistro();
-                send(clientfd,name,32,0);                                                   // Envía el nombre de la mascota.
+                Send(clientfd, name, 32, 0);                                                // Envía el nombre de la mascota.
                 long size = 0;
-                recv(clientfd,&size,sizeof(size),0);                                        // Recibe el tamaño de la lista a leer.
-                char* search = malloc(size);
-                bzero(search,size); ////////////////////////////////////////////////////
-                recv(clientfd,search,size,0);                                               // Recibe la lista con las coincidencias encontradas.
-                printw("%s",search);                                                        // Imprime la lista.
-                free(search);
-                free(name);
+                Recv(clientfd, &size, sizeof(size), 0);                                     // Recibe el tamaño de la lista a leer.
+                char* search = Malloc(size);
+                Recv(clientfd, search, size, 0);                                            // Recibe la lista con las coincidencias encontradas.
+                printw("%s", search);                                                       // Imprime la lista.
+                Free(search);
+                Free(name);
                 break;
             } 
-            case 5:{                                                                        // Si el usuario quiere salir del programa.
+            case 5: {                                                                       // Si el usuario quiere salir del programa.
                 quit = true;
                 break;
             }                   
             
-            default:{
-                printw("El valor \"%hi\" no es valido.\n\n",MenuOption);
+            default: {
+                printw("El valor \"%hi\" no es valido.\n\n", MenuOption);
             }
                 
         }

@@ -163,7 +163,7 @@ void *ListenExit(void *client){
         if(equals(exitKey, "EXIT")){                                                // Si la cadena es "EXIT".
             sem_close(semaphore);
             sem_unlink("S");
-            //SaveTable(Table);
+            SaveTable(Table);
             exit(EXIT_SUCCESS);                                                     // Sale del programa sin enviar error.
         }
     }
