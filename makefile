@@ -24,5 +24,5 @@ clean:
 	@ rm -R Server/historias
 	@ rm -R Server/HashNodes
 	@ mkdir Server/historias
-	@ mkdir Server/hashNodes
+	@ mkdir Server/HashNodes
 	@ echo "Se han eliminado las historias y registros correctamente."

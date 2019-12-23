@@ -15,15 +15,15 @@ int hash(char *name){
     if(index < 0){
         index *= -1;
     }
-    return index%TAMANOTABLA;
+    return index % TAMANOTABLA;
 }
 
 char* GetFileName(int index){
-    index = index%TAMANOTABLA;
-    char *fileName = (char *) malloc(1);
+    index = index % TAMANOTABLA;
+    char *fileName = (char *) malloc(100);
     char *indexString = IntToString(index);
     *fileName = '\0';
-    strcat(fileName, "HashNodes/Node");
+    strcat(fileName, "../Server/HashNodes/Node");
     strcat(fileName, indexString);
     strcat(fileName, ".txt");
     free(indexString);
@@ -108,11 +108,12 @@ struct String* buscarId(struct HashTable *table, char *nombre){
     free(fileName);
     fclose(file);
     fclose(res);
+    remove("Res.txt");
     return string;
 }
 
-//borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demas 
-//elementos que esten en la misma posicion de la tabla
+// Borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demás.
+// Elementos que esten en la misma posicion de la tabla.
 long borrar(struct HashTable *table, long id){
     char *fileName = GetFileName(id);
     FILE *file = fopen(fileName, "r+");
@@ -200,7 +201,7 @@ long insertElement(struct HashTable *table, char *nombre){
 
 struct HashTable* CreateTable(){
     struct HashTable *table = malloc(sizeof(struct HashTable));
-    FILE *f = fopen("HashNodes/Data.txt", "r");
+    FILE *f = fopen("../Server/HashNodes/Data.txt", "r");
     if(f == NULL)
         table->Elements = 0;
     else {
@@ -222,7 +223,7 @@ struct HashTable* CreateTable(){
 }
 
 void SaveTable(struct HashTable *table){
-    FILE *f = fopen("HashNodes/Data.txt", "w+");
+    FILE *f = fopen("../Server/HashNodes/Data.txt", "w+");
     int w = fwrite(&table->Elements, sizeof(int), 1, f);
     fclose(f);
     free(table);
