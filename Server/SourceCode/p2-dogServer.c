@@ -117,37 +117,16 @@ void* ListenRequest(void* args){
                     recv(Client->clientfd, &id, sizeof(id), 0);                                     // Recibe la id del registro a eliminar.
                     exist = borrar(Table, id);                                                      // Intenta borrar de la tabla hash.
 
-                    if(exist != -1){                                                                // Si el registro fue borrado de la tabla hash ...
-                        long idTemp;
-                        FILE *file, *temp;
+                    if(exist != -1){                                                                // Si el registro fue borrado de la tabla hash ...                     
                         char* idChar;
                         answer = true;
-                        struct dogType* registro = malloc(sizeof(struct dogType));
-                        bzero(registro, sizeof(struct dogType));
 
-                        send(Client->clientfd, &answer, sizeof(answer), 0);
-                        file = fopen("dataDogs.dat", "r");                                          // Se abre un archivo que contiene las estructuras..
-                        temp = fopen("temp.dat", "w+");                                             // Se crea un archivo temporal donde se guardaran las estructuras que no serán eliminadas.
-
-                        while(feof(file) == 0){
-                            fread(&idTemp, sizeof(long), 1, file);                                  // ..... Lea los datos .....
-                            fread(registro, sizeof(struct dogType), 1, file);
-                            if(idTemp == id){                                                       // ... y exceptuando el que se va a eliminnar...
-                                continue;
-                            }
-                            fwrite(&idTemp, sizeof(long), 1, temp);                                 // ... Escribirlos todos en el archivo temporal
-                            fwrite(registro, sizeof(struct dogType), 1, temp);
-                        }
-
-                        fclose(file);
-                        fclose(temp);
-                        remove("dataDogs.dat");                                                     // Se elimina el archivo viejo y ....
-                        rename("temp.dat", "dataDogs.dat");
-                        remove(FilePath(id));                                                       // Elimina la historia clínica de la mascota eliminada.
+                        BorrarRegistro(id);                                                         // Borra el registro del archivo de estructuras.
+                        send(Client->clientfd, &answer, sizeof(answer), 0);                        
+                                                                               
                         idChar = malloc(10);
                         sprintf(idChar,"%li",id);
                         WriteLog(3, inet_ntoa(Client->Ip.sin_addr), idChar);                        // Escribe el registro de la acción.
-                        free(registro);
                         free(idChar);
                     }else{
                         answer = false;

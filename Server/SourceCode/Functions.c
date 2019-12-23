@@ -198,3 +198,23 @@ struct dogType* FindPetById(long id){
     return pet;
 }
 
+void Bind(){
+
+}
+
+void Listen(){
+
+}
+
+void Malloc(){
+
+}
+
+void Recv(){
+
+}
+
+void Send(){
+    
+}
+
