@@ -158,14 +158,25 @@ int main(){
             }    
             case 4: {                                                                       // Si se desea buscar un registro.
                 Send(clientfd, &MenuOption, sizeof(MenuOption), 0);
+                long cant, id;
                 char *name = BuscarRegistro();
+                char *rName = Malloc(32); 
                 Send(clientfd, name, 32, 0);                                                // Envía el nombre de la mascota.
-                long size = 0;
-                Recv(clientfd, &size, sizeof(size), 0);                                     // Recibe el tamaño de la lista a leer.
-                char* search = Malloc(size);
-                Recv(clientfd, search, size, 0);                                            // Recibe la lista con las coincidencias encontradas.
-                printw("%s", search);                                                       // Imprime la lista.
-                Free(search);
+
+                Recv(clientfd, &cant, sizeof(long), 0);                                     // Recibe la cantidad de estructuras que coincidieron.
+
+                if(cant == 0){
+                    printw("No se encontraron coincidencias.\n");
+                }else{
+                    for(long i = 0; i < cant; i++){                                         // Recibe cada una de las coincidencias.
+                        Recv(clientfd, &id, sizeof(long), 0);                               // Recibe id.
+                        printw("Id: %li, ", id);
+                        Recv(clientfd, rName, 32, 0);                                       // Recibe Nombre.
+                        printw("Nombre: %s\n", rName);
+                    }
+                }
+
+                Free(rName);
                 Free(name);
                 break;
             } 

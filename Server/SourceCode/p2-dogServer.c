@@ -136,15 +136,31 @@ void* ListenRequest(void* args){
             case 4: {                                                               // Si la opción del cliente es Buscar Registro.
                 sem_wait(semaphore);
 
-                char *name = Malloc(32);
-                Recv(Client->clientfd, name, 32, 0);                                // Recibe el nombre de la mascota a buscar.
-                struct String* search = buscarId(Table, name);
-                long size = search->length;
-                Send(Client->clientfd, &size, sizeof(size), 0);
-                Send(Client->clientfd, search->string, size, 0);
+                FILE* file;
+                char *name, *rName;
+                long rId;
+
+                name = Malloc(SIZE);
+                rName = Malloc(SIZE);
+
+                Recv(Client->clientfd, name, SIZE, 0);                              // Recibe el nombre de la mascota a buscar.
+                long cant = buscarId(Table, name);
+                file = fopen("Res.dat", "r");
+
+                Send(Client->clientfd, &cant, sizeof(cant), 0);
+
+                for(long i = 0; i < cant; i++){                                     // Cada coincidencia encontrada.
+                    fread(&rId, sizeof(long), 1, file);                             // Se lee y se envía.
+                    Send(Client->clientfd, &rId, sizeof(long), 0);
+                    fread(rName, SIZE, 1, file);
+                    Send(Client->clientfd, rName, SIZE, 0);
+                }
+
+                remove("Res.dat");
                 WriteLog(4, inet_ntoa(Client->Ip.sin_addr), name);                  // Escribe la acción en el Log.
-                Free(search);
                 Free(name);
+                Free(rName);
+                fclose(file);
 
                 sem_post(semaphore);
                 break;

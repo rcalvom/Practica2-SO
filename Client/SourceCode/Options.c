@@ -48,6 +48,7 @@ char* BuscarRegistro(){
     nombre = Malloc(32);
     printw("Por favor ingrese el nombre de la mascota que desea buscar: ");
     scanw("%s", nombre);
+    toUpperCase(nombre);
     printw("\n");
     return nombre;
 }

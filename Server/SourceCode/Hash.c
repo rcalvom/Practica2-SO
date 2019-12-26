@@ -54,60 +54,50 @@ bool ExisteElElemento(long id){
     return false;
 }
 
-// Busca e imprime todos los registros que coincidan con un nombre dado
-struct String* buscarId(struct HashTable *table, char *nombre){
+// Busca los registros que coincidan con un nombre dado retorna la cantidad de elementos.
+long buscarId(struct HashTable *table, char *nombre){
 
     int index;
-    char *respaldoNombre, *fileName, *IdChar;
+    long i = 0;
+    char *respaldoNombre, *CrespaldoNombre, *fileName;
     FILE *res, *file;
     struct String *string;
 
     respaldoNombre = Malloc(SIZE);
-    IdChar = Malloc(10);
-    string = Malloc(sizeof(struct String));
-    CopyString(nombre, respaldoNombre);
-    toUpperCase(respaldoNombre);
-    index = hash(respaldoNombre);
+    CrespaldoNombre = Malloc(SIZE);
+    index = hash(nombre);
     fileName = GetFileName(index);
     file = fopen(fileName, "r");
     if(file == NULL){
         Free(respaldoNombre);
+        Free(CrespaldoNombre);
         Free(fileName);
-        Free(string);
-        Free(IdChar);
-        return NULL;
+        return 0;
     }
 
-    res = fopen("Res.txt", "w+");
+    res = fopen("Res.dat", "w+");
 
     while(feof(file) == 0){
         long id;
         fread(&id, sizeof(long), 1, file);
         fread(respaldoNombre, SIZE, 1, file);
-        if(equals(nombre, respaldoNombre)){
-            bzero(IdChar, 10);
-            sprintf(IdChar, "%li", id);
-            fwrite("Id: ", 4, 1, res);
-            fwrite(IdChar, strlen(IdChar), 1, res);
-            fwrite(", Nombre: ", 10, 1, res);
-            fwrite(respaldoNombre, strlen(respaldoNombre), 1, res);
-            fwrite("\n", 1, 1, res);
+        CopyString(respaldoNombre, CrespaldoNombre);
+        toUpperCase(CrespaldoNombre);
+        if(feof(file) != 0){
+            break;
+        }
+        if(equals(nombre, CrespaldoNombre)){
+            fwrite(&id, sizeof(long), 1, res);
+            fwrite(respaldoNombre, SIZE, 1, res);
+            i++;
         }
     }
     fclose(file);
     fclose(res);
-    res = fopen("Res.txt", "r");
-    fseek(res, 0L, SEEK_END);
-    string->length = ftell(res);
-    rewind(res);
-    string->string = Malloc(string->length + 1);
-    fread(string->string, string->length, 1, res);
-    fclose(res);
-    remove("Res.txt");
     Free(respaldoNombre);
+    Free(CrespaldoNombre);
     Free(fileName);
-    Free(IdChar);
-    return string;
+    return i;
 }
 
 // Borra el elemento en la tabla hash que coincida con el id dado en idd y reencadena los demás.

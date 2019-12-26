@@ -25,6 +25,14 @@ void DisposeConsole(){
     endwin();                                                                   // Antes de finalizar, elimina la configuración hecha sobre la consola por parte de la libreria ncurses.
 }
 
+//Pasar cada caracter de una cadena a mayúsculas.
+void toUpperCase(char *word){
+    for(int i = 0; i < 32; i++){
+        if(*(word + i) >= 'a' && *(word + i)<='z')
+            *(word + i) = (char)(*(word + i) - 32);
+    }
+}
+
 // Función que libera size bytes de memoria, estos bytes estan inicializados en 0.
 void* Malloc(size_t size){
     
