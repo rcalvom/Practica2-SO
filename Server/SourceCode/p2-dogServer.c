@@ -136,7 +136,7 @@ void* ListenRequest(void* args){
             case 4: {                                                               // Si la opción del cliente es Buscar Registro.
                 sem_wait(semaphore);
 
-                char* name = Malloc(32);
+                char *name = Malloc(32);
                 Recv(Client->clientfd, name, 32, 0);                                // Recibe el nombre de la mascota a buscar.
                 struct String* search = buscarId(Table, name);
                 long size = search->length;

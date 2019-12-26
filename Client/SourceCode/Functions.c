@@ -27,6 +27,7 @@ void DisposeConsole(){
 
 // Función que libera size bytes de memoria, estos bytes estan inicializados en 0.
 void* Malloc(size_t size){
+    
     void* pointer = malloc(size);
     if(pointer == NULL){
         printw("Error reservando memoria.");

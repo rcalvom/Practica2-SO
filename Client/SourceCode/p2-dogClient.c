@@ -156,9 +156,9 @@ int main(){
                 }
                 break;
             }    
-            case 4:{                                                                        // Si se desea buscar un registro.
-                Send(clientfd, &MenuOption,sizeof(MenuOption), 0);
-                char* name = BuscarRegistro();
+            case 4: {                                                                       // Si se desea buscar un registro.
+                Send(clientfd, &MenuOption, sizeof(MenuOption), 0);
+                char *name = BuscarRegistro();
                 Send(clientfd, name, 32, 0);                                                // Envía el nombre de la mascota.
                 long size = 0;
                 Recv(clientfd, &size, sizeof(size), 0);                                     // Recibe el tamaño de la lista a leer.

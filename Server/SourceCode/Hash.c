@@ -54,59 +54,59 @@ bool ExisteElElemento(long id){
     return false;
 }
 
-//busca e imprime todos los registros que coincidan con un nombre dado
+// Busca e imprime todos los registros que coincidan con un nombre dado
 struct String* buscarId(struct HashTable *table, char *nombre){
+
     int index;
-    char *respaldoNombre = malloc(SIZE), *fileName;
-    FILE *res = fopen("Res.txt", "w+"), *file;
-    struct String* string = malloc(sizeof(struct String));
-    bzero(respaldoNombre, SIZE);
+    char *respaldoNombre, *fileName, *IdChar;
+    FILE *res, *file;
+    struct String *string;
+
+    respaldoNombre = Malloc(SIZE);
+    IdChar = Malloc(10);
+    string = Malloc(sizeof(struct String));
     CopyString(nombre, respaldoNombre);
     toUpperCase(respaldoNombre);
     index = hash(respaldoNombre);
     fileName = GetFileName(index);
     file = fopen(fileName, "r");
     if(file == NULL){
-        free(respaldoNombre);
-        free(fileName);
-        free(string);
-        fclose(res);
+        Free(respaldoNombre);
+        Free(fileName);
+        Free(string);
+        Free(IdChar);
         return NULL;
     }
-    string->length = 0;
-    while(feof(file) == 0) {
+
+    res = fopen("Res.txt", "w+");
+
+    while(feof(file) == 0){
         long id;
-        int r = fread(&id, sizeof(long), 1, file);
-        r += fread(respaldoNombre, SIZE, 1, file);
-        if(r < 2){
-            break;
-        }
+        fread(&id, sizeof(long), 1, file);
+        fread(respaldoNombre, SIZE, 1, file);
         if(equals(nombre, respaldoNombre)){
-            struct String idElemento;
-            idElemento.string = IntToString(id);
-            idElemento.length = strlen(idElemento.string);
-            int w = 0, SizeRn = strlen(respaldoNombre);
-
-            string->length += idElemento.length + SizeRn + 15;
-            w += fwrite("Id: ", 4, 1, res);
-            w += fwrite(idElemento.string, idElemento.length, 1, res);
-            w += fwrite(", Nombre: ", 10, 1, res);
-            w += fwrite(respaldoNombre, SizeRn, 1, res);
-            w += fwrite("\n", 1, 1, res);
-
-            free(idElemento.string);
+            bzero(IdChar, 10);
+            sprintf(IdChar, "%li", id);
+            fwrite("Id: ", 4, 1, res);
+            fwrite(IdChar, strlen(IdChar), 1, res);
+            fwrite(", Nombre: ", 10, 1, res);
+            fwrite(respaldoNombre, strlen(respaldoNombre), 1, res);
+            fwrite("\n", 1, 1, res);
         }
     }
-    rewind(res);
-    do{
-        string->string = malloc(string->length);
-    } while(string->string == NULL);
-    fread(string->string, string->length, 1, res);
-    free(respaldoNombre);
-    free(fileName);
     fclose(file);
     fclose(res);
+    res = fopen("Res.txt", "r");
+    fseek(res, 0L, SEEK_END);
+    string->length = ftell(res);
+    rewind(res);
+    string->string = Malloc(string->length + 1);
+    fread(string->string, string->length, 1, res);
+    fclose(res);
     remove("Res.txt");
+    Free(respaldoNombre);
+    Free(fileName);
+    Free(IdChar);
     return string;
 }
 
