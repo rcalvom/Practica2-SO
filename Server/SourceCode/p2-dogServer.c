@@ -171,7 +171,6 @@ void *ListenExit(void *client){
 
 // Método principal. Punto de partida inicial de la practica.
 int main(){
-
     int serverfd, CurrentUsers;
     struct sockaddr_in server; 
     socklen_t len;                                 

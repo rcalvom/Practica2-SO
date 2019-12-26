@@ -82,27 +82,25 @@ struct String* buscarId(struct HashTable *table, char *nombre){
             break;
         }
         if(equals(nombre, respaldoNombre)){
-            struct String elemento;
-            char *ide = IntToString(id);
-            elemento.string = malloc(1);
-            *elemento.string = '\0';
+            struct String idElemento;
+            idElemento.string = IntToString(id);
+            idElemento.length = strlen(idElemento.string);
+            int w = 0, SizeRn = strlen(respaldoNombre);
 
-            strcat(elemento.string, "Id: ");
-            strcat(elemento.string, ide);
-            strcat(elemento.string, ", Nombre: ");
-            strcat(elemento.string, respaldoNombre);
-            strcat(elemento.string, "\n");
+            string->length += idElemento.length + SizeRn + 15;
+            w += fwrite("Id: ", 4, 1, res);
+            w += fwrite(idElemento.string, idElemento.length, 1, res);
+            w += fwrite(", Nombre: ", 10, 1, res);
+            w += fwrite(respaldoNombre, SizeRn, 1, res);
+            w += fwrite("\n", 1, 1, res);
 
-            elemento.length = strlen(elemento.string);
-            string->length += elemento.length;
-            int w = fwrite(elemento.string, elemento.length, 1, res);
-
-            free(elemento.string);
-            free(ide);
+            free(idElemento.string);
         }
     }
     rewind(res);
-    string->string = malloc(string->length);
+    do{
+        string->string = malloc(string->length);
+    } while(string->string == NULL);
     fread(string->string, string->length, 1, res);
     free(respaldoNombre);
     free(fileName);
@@ -227,4 +225,22 @@ void SaveTable(struct HashTable *table){
     int w = fwrite(&table->Elements, sizeof(int), 1, f);
     fclose(f);
     free(table);
+}
+
+void Vaciar(){
+    FILE *f = fopen("HashNodes/Data.txt", "w+");
+    int w = 0;
+    do{
+        w = fwrite(&w, sizeof(int), 1, f);
+    } while(w == 0);
+    fclose(f);
+    for(int i = 0; i < TAMANOTABLA; i++){
+        char *filename = GetFileName(i);
+        f = fopen(filename, "r");
+        if(f != NULL){
+            fclose(f);
+            remove(filename);
+        }
+        free(filename);
+    }
 }
